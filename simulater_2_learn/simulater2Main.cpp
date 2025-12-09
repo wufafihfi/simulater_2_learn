@@ -50,11 +50,12 @@ int main() {
     ImGui::StyleColorsDark();
 
     // SFML图形
-    sf::Text text(_basefont);
-    text.setString(L"经典语句：Hello world");
-    text.setCharacterSize(24);
-    text.setPosition({ 200, 150 });
-    text.setFillColor(sf::Color::Red);
+    bzd_SFML_main::Bzd_SFML_Ready();
+    //sf::Text text(_basefont);
+    //text.setString(L"经典语句：Hello world");
+    //text.setCharacterSize(24);
+    //text.setPosition({ 200, 150 });
+    //text.setFillColor(sf::Color::Red);
 
     // 进入主循环
     sf::Clock deltaClock;
@@ -74,7 +75,7 @@ int main() {
         ImGui::SFML::Update(window, deltaClock.restart());
 
         //SFML
-        
+        bzd_SFML_main::Bzd_SFML_Update();
         //IMGUI
         UI_Imgui::UImain();
 
@@ -82,7 +83,8 @@ int main() {
         //刷新
         window.clear(backColor);
         //SFML
-        window.draw(text);
+        bzd_SFML_main::Bzd_SFML_draw();
+        //window.draw(text);
         //ImGui
         ImGui::SFML::Render(window);
         ////
