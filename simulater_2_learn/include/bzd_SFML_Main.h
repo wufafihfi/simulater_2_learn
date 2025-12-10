@@ -13,6 +13,9 @@ namespace bzd_SFML_main {
 	void Bzd_SFML_Ready();
 	void Bzd_SFML_Update();
 	void Bzd_SFML_draw();
+
+	void UIready();
+	void UIuodata();
 }
 
 #endif#pragma once

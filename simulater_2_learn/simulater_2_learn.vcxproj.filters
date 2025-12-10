@@ -21,9 +21,6 @@
     <ClCompile Include="include\appInit.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="include\UI_imgui.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="include\bzd_SFML_Main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -33,9 +30,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\S2L_includeAll.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="include\UI_imgui.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\bzd_SFML_Main.h">

@@ -24,11 +24,16 @@ int main() {
     // DPI
     SetProcessDpiAwareness(PROCESS_DPI_UNAWARE);
     // SFML
+    sf::Vector2u windowSize = sf::Vector2u({ 1700 ,900 });
     //sf::RenderWindow window;
     auto& window = AppInit::getWinodw();
-    window.create(sf::VideoMode({ 1700, 900 }),
-        L"SF",
+    window.create(sf::VideoMode(windowSize),
+        L"SFML&IMGUI 进阶学习项目",
         sf::Style::Titlebar | sf::Style::Close);
+
+    sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
+    window.setPosition(sf::Vector2i(desktopMode.size.x / 2.0f - windowSize.x / 2.0f, desktopMode.size.y / 2.0f - windowSize.y / 2.0f));
+
     if (!window.isOpen()) {
         MessageBoxA(NULL, "窗口创建失败", "错误", MB_ICONERROR | MB_OK);
         return -1;
@@ -46,8 +51,8 @@ int main() {
     AppInit::InitFile_IMGUI();
     auto& _basefont = AppInit::getBasefont();
 
-    // IMGUI样式
-    ImGui::StyleColorsDark();
+    // IMGUI
+    bzd_SFML_main::UIready();
 
     // SFML图形
     bzd_SFML_main::Bzd_SFML_Ready();
@@ -77,7 +82,7 @@ int main() {
         //SFML
         bzd_SFML_main::Bzd_SFML_Update();
         //IMGUI
-        UI_Imgui::UImain();
+        bzd_SFML_main::UIuodata();
 
         // 渲染
         //刷新

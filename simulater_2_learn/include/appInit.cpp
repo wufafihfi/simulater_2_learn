@@ -29,7 +29,7 @@ namespace AppInit {
     // SFML字体  基础
     sf::Font basefont;
     sf::Font& getBasefont() {
-        if (basefont.isSmooth())
+        if (basefont.getInfo().family.empty())
         {
             baseFontLoad_SF(basefont);
         }
@@ -112,6 +112,7 @@ namespace AppInit {
     // IMGUI初始化集合
     void InitFile_IMGUI() {
         ImGuiIO& io = ImGui::GetIO();
+
         auto& _basepath = getProgramDirectoryPath();
         static std::string layoutiniPath = _basepath.basepath_W + u8"\\config\\imgui_layout.ini";
         io.IniFilename = layoutiniPath.c_str();
@@ -131,7 +132,7 @@ namespace AppInit {
             debugMessages.push_back(u8"ImGui 字体加载成功!");
         }
         else {
-            std::cout << "ImGui E字体加载失败，使用默认字体" << std::endl;
+            std::cout << "ImGui 字体加载失败，使用默认字体" << std::endl;
             debugMessages.push_back(u8"ImGui 字体加载失败，使用默认字体");
             io.Fonts->AddFontDefault();
         }

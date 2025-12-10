@@ -129,14 +129,12 @@
   <ItemGroup>
     <ClCompile Include="include\appInit.cpp" />
     <ClCompile Include="include\bzd_SFML_Main.cpp" />
-    <ClCompile Include="include\UI_imgui.cpp" />
     <ClCompile Include="simulater2Main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\appInit.h" />
     <ClInclude Include="include\bzd_SFML_Main.h" />
     <ClInclude Include="include\S2L_includeAll.hpp" />
-    <ClInclude Include="include\UI_imgui.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
