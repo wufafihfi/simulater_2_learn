@@ -22,7 +22,7 @@ int main() {
     auto& backColor = AppInit::getBackColor();
 
     // DPI
-    SetProcessDpiAwareness(PROCESS_DPI_UNAWARE);
+    //SetProcessDpiAwareness(PROCESS_DPI_UNAWARE);
     // SFML
     sf::Vector2u windowSize = sf::Vector2u({ 1700 ,900 });
     //sf::RenderWindow window;
@@ -31,7 +31,10 @@ int main() {
         L"SFML&IMGUI 进阶学习项目",
         sf::Style::Titlebar | sf::Style::Close);
 
-    sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
+    //sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
+#ifdef _WIN32
+    sf::VideoMode desktopMode = sf::VideoMode(sf::Vector2u(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)));
+#endif
     window.setPosition(sf::Vector2i(desktopMode.size.x / 2.0f - windowSize.x / 2.0f, desktopMode.size.y / 2.0f - windowSize.y / 2.0f));
 
     if (!window.isOpen()) {

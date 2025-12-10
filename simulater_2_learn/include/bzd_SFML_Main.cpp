@@ -25,7 +25,7 @@ namespace bzd_SFML_main {
         // SFML图形
         text = std::make_unique<sf::Text>(_basefont);
         //text->setFont(_basefont);
-        text->setString(L"经典语句：Hello world");
+        text->setString(L"经典语句：Hello world 还有 FMYSSMGAY");
         text->setCharacterSize(24);
         text->setPosition({ 200, 150 });
         text->setFillColor(sf::Color::Red);
@@ -81,7 +81,7 @@ namespace bzd_SFML_main {
 		// 调试窗口
 		{
 			static float windowAlpha = 0;
-			static float maxAlpha = 0.7;
+			static float maxAlpha = 0.8;
 			static float minAlpha = 0.3;
 
 			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, windowAlpha);
@@ -91,14 +91,16 @@ namespace bzd_SFML_main {
 			bool bestHoverCheck = ImGui::IsWindowHovered(
 				ImGuiHoveredFlags_ChildWindows |
 				ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
-			if (bestHoverCheck)
+			bool justActivated = ImGui::IsWindowAppearing();
+			bool isFocused = ImGui::IsWindowFocused();
+			if (bestHoverCheck || justActivated || isFocused)
 			{
 				windowAlpha = valueChangeSmooth(10, windowAlpha, maxAlpha);
 			}
 			else {
 				windowAlpha = valueChangeSmooth(20, windowAlpha, minAlpha);
 			}
-			ImGui::Text(u8"窗口透明度:%0.01f", windowAlpha);
+			ImGui::Text(u8"窗口透明度:%0.3f", windowAlpha);
 			if (ImGui::IsItemHovered()) {
 				ImGui::SetTooltip(u8"窗口透明度动态响应调试信息");
 			}
@@ -114,6 +116,11 @@ namespace bzd_SFML_main {
 				ImGui::SetScrollHereY(1.0f);
 			}
 			ImGui::EndChild();
+			ImGui::TextColored(ImVec4(1, 1, 0, 1), u8"焦点状态:");
+			ImGui::Text(u8"聚焦(Focused): %s", isFocused ? u8"是" : u8"否");
+			ImGui::Text(u8"悬停(Hovered): %s", bestHoverCheck ? u8"是" : u8"否");
+			ImGui::Text(u8"刚出现(Appearing): %s", justActivated ? u8"是" : u8"否");
+			ImGui::NewLine();
 			ImGui::Text(u8"全局鼠标坐标 X:%d Y:%d", _globalMousePos.x, _globalMousePos.y);
 			ImGui::Text(u8"程序窗口鼠标坐标 X:%d Y:%d", _windowMousePos.x, _windowMousePos.y);
 			ImGui::Text(u8"焦点是否为此窗口: %s", _window.hasFocus() ? u8"是" : u8"否");
@@ -121,26 +128,36 @@ namespace bzd_SFML_main {
 			ImGui::NewLine();
 			ImGui::Text(u8"程序窗口大小 当前: (%d, %d)", _window.getSize().x, _window.getSize().y);
 			static float k_size = 900.0f / 1700.0f;
-			static int currentItem = 3;
+			static int currentItem = 4;
 			static const char* items[] = { u8"1700x900",u8"1500x794" ,u8"1300x688", u8"1000x529", u8"800x423" };
 			ImGui::Combo(u8"程序窗口大小选择", &currentItem, items, IM_ARRAYSIZE(items));
 			static bool windowSizeChange = false;
+#ifdef _WIN32
+			static sf::VideoMode desktopMode = sf::VideoMode(sf::Vector2u(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)));
 			if (windowSizeChange) {
 				sf::Vector2 windowSize = _window.getSize();
-				sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
 				_window.setPosition(sf::Vector2i(desktopMode.size.x / 2.0f - windowSize.x / 2.0f, desktopMode.size.y / 2.0f - windowSize.y / 2.0f));
 
 				windowSizeChange = false;
 			}
+#else
+			static sf::VideoMode desktopMode = sf::VideoMode(sf::Vector2u(9999, 9999));
+#endif
 			switch (currentItem)
 			{
 			case 0:
 			{
 				sf::Vector2u windowSIze = sf::Vector2u(1700, 1700 * k_size);
+				if (desktopMode.size.x <= windowSIze.x || desktopMode.size.y <= windowSIze.y) {
+					_debugMessages.push_back(u8"窗口大小设置失败,屏幕(虚拟)不够大");
+					currentItem = 4;
+					break;
+				}
 				if (!(_window.getSize().x == windowSIze.x && _window.getSize().y == windowSIze.y))
 				{
 					_window.setSize(windowSIze);
 					std::cout << windowSIze.x << "x" << windowSIze.y << std::endl;
+					_debugMessages.push_back(u8"窗口大小设置:1700x900");
 					windowSizeChange = true;
 				}
 			}
@@ -149,11 +166,17 @@ namespace bzd_SFML_main {
 			case 1:
 			{
 				sf::Vector2u windowSIze = sf::Vector2u(1500, 1500 * k_size);
+				if (desktopMode.size.x <= windowSIze.x || desktopMode.size.y <= windowSIze.y) {
+					_debugMessages.push_back(u8"窗口大小设置失败,屏幕(虚拟)不够大");
+					currentItem = 4;
+					break;
+				}
 				if (!(_window.getSize().x == windowSIze.x && _window.getSize().y == windowSIze.y))
 				{
 					_window.setSize(windowSIze);
 					std::cout << windowSIze.x << "x" << windowSIze.y << std::endl;
 					windowSizeChange = true;
+					_debugMessages.push_back(u8"窗口大小设置:1500x794");
 				}
 			}
 			break;
@@ -161,11 +184,17 @@ namespace bzd_SFML_main {
 			case 2:
 			{
 				sf::Vector2u windowSIze = sf::Vector2u(1300, 1300 * k_size);
+				if (desktopMode.size.x <= windowSIze.x || desktopMode.size.y <= windowSIze.y) {
+					_debugMessages.push_back(u8"窗口大小设置失败,屏幕(虚拟)不够大");
+					currentItem = 4;
+					break;
+				}
 				if (!(_window.getSize().x == windowSIze.x && _window.getSize().y == windowSIze.y))
 				{
 					_window.setSize(windowSIze);
 					std::cout << windowSIze.x << "x" << windowSIze.y << std::endl;
 					windowSizeChange = true;
+					_debugMessages.push_back(u8"窗口大小设置:1300x688");
 				}
 			}
 			break;
@@ -173,11 +202,17 @@ namespace bzd_SFML_main {
 			case 3:
 			{
 				sf::Vector2u windowSIze = sf::Vector2u(1000, 1000 * k_size);
+				if (desktopMode.size.x <= windowSIze.x || desktopMode.size.y <= windowSIze.y) {
+					_debugMessages.push_back(u8"窗口大小设置失败,屏幕(虚拟)不够大");
+					currentItem = 4;
+					break;
+				}
 				if (!(_window.getSize().x == windowSIze.x && _window.getSize().y == windowSIze.y))
 				{
 					_window.setSize(windowSIze);
 					std::cout << windowSIze.x << "x" << windowSIze.y << std::endl;
 					windowSizeChange = true;
+					_debugMessages.push_back(u8"窗口大小设置:1000x529");
 				}
 			}
 			break;
@@ -185,11 +220,17 @@ namespace bzd_SFML_main {
 			case 4:
 			{
 				sf::Vector2u windowSIze = sf::Vector2u(800, 800 * k_size);
+				if (desktopMode.size.x <= windowSIze.x || desktopMode.size.y <= windowSIze.y) {
+					_debugMessages.push_back(u8"窗口大小设置失败,屏幕(虚拟)不够大");
+					currentItem = 4;
+					break;
+				}
 				if (!(_window.getSize().x == windowSIze.x && _window.getSize().y == windowSIze.y))
 				{
 					_window.setSize(windowSIze);
 					std::cout << windowSIze.x << "x" << windowSIze.y << std::endl;
 					windowSizeChange = true;
+					_debugMessages.push_back(u8"窗口大小设置:800x423");
 				}
 			}
 			break;
@@ -216,7 +257,8 @@ namespace bzd_SFML_main {
 			bool bestHoverCheck = ImGui::IsWindowHovered(
 				ImGuiHoveredFlags_ChildWindows |
 				ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
-			if (bestHoverCheck)
+			bool isFocused = ImGui::IsWindowFocused();
+			if (bestHoverCheck || isFocused)
 			{
 				windowAlpha = valueChangeSmooth(10, windowAlpha, maxAlpha);
 			}
@@ -242,15 +284,17 @@ namespace bzd_SFML_main {
 			bool bestHoverCheck = ImGui::IsWindowHovered(
 				ImGuiHoveredFlags_ChildWindows |
 				ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
-			if (bestHoverCheck)
+			bool isFocused = ImGui::IsWindowFocused();
+			if (bestHoverCheck || isFocused)
 			{
 				windowAlpha = valueChangeSmooth(10, windowAlpha, maxAlpha);
 			}
 			else {
 				windowAlpha = valueChangeSmooth(20, windowAlpha, minAlpha);
 			}
+			ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"中文测试 FMYSSMGAY");
 			ImGui::NewLine();
-			ImGui::DebugTextEncoding(u8"中文测试 HELLO 。//；【】；了【");
+			ImGui::DebugTextEncoding(u8"中文测试 。//；【】；了【");
 			ImGui::End();
 
 
