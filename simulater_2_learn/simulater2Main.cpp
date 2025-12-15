@@ -11,6 +11,10 @@
 
 #include "include/S2L_includeAll.hpp"
 
+#pragma comment(lib, "delayimp.lib")
+#pragma comment(linker, "/DELAYLOAD:Shcore.dll")
+#pragma comment(lib, "Shcore.lib")
+
 int main() {
     // 初始变量
     //路径
@@ -22,7 +26,7 @@ int main() {
     auto& backColor = AppInit::getBackColor();
 
     // DPI
-    //SetProcessDpiAwareness(PROCESS_DPI_UNAWARE);
+    SetProcessDpiAwareness(PROCESS_DPI_UNAWARE);
     // SFML
     sf::Vector2u windowSize = sf::Vector2u({ 1700 ,900 });
     //sf::RenderWindow window;
@@ -31,7 +35,7 @@ int main() {
         L"SFML&IMGUI 进阶学习项目",
         sf::Style::Titlebar | sf::Style::Close);
 
-    //sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
+    //sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();sf::Style::Titlebar | sf::Style::Close
 #ifdef _WIN32
     sf::VideoMode desktopMode = sf::VideoMode(sf::Vector2u(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)));
 #endif
@@ -43,6 +47,7 @@ int main() {
     }
     window.setActive(true);
     window.setFramerateLimit(120);
+    window.setVerticalSyncEnabled(false);
      
     // IMGUI
     if (!ImGui::SFML::Init(window)) {
@@ -98,5 +103,5 @@ int main() {
         ////
         window.display();
     }
-    ImGui::SFML::Shutdown();
+    bzd_SFML_main::Bzd_End();
 }

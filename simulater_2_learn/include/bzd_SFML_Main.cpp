@@ -7,10 +7,26 @@ namespace bzd_SFML_main {
 		return _v + value;
 	}
 
+	//BOX2D参数
+	sf::Clock clock;
+	float accumulator = 0.0f;
+	const float timeStep = 1.0f / 60.0f;
+	int subStepCount = 4;
+	b2WorldDef worldDef = b2DefaultWorldDef();
+	bzd_Phy::PhysicsWorld phyWorld_1(&worldDef,{ 0.0f, -10.0f });
+
     //图形元素（智能指针管理）
     std::unique_ptr<sf::Text> text;
 	// TXT颜色
 	float textColor[3] = { 0.0f, 1.0f, 0.0f };
+
+	//物体ID
+	b2BodyId ground_bodyId;
+	b2BodyId ground_bodyId_1;
+	b2BodyId body_1_bodyId;
+	b2BodyId body_2_bodyId;
+	b2BodyId body_3_bodyId;
+	b2BodyId body_4_bodyId;
 
 	//sfml
     void Bzd_SFML_Ready() {
@@ -22,13 +38,115 @@ namespace bzd_SFML_main {
         //调试
         auto& _debugMessages = AppInit::getDebugMessages();
 
+
         // SFML图形
         text = std::make_unique<sf::Text>(_basefont);
         //text->setFont(_basefont);
-        text->setString(L"经典语句：Hello world 还有 FMYSSMGAY");
+        text->setString(L"经典语句：Hello world");
         text->setCharacterSize(24);
         text->setPosition({ 200, 150 });
         text->setFillColor(sf::Color::Red);
+
+		phyWorld_1.setView(_window.getView());
+		// BOX2D
+		phyWorld_1.setWindow(&_window);
+		phyWorld_1.SetCameraOffset(b2Vec2{ 0.0f, 0.0f });
+		phyWorld_1.SetCameraZoom(0.8f);
+		// 物体
+		//地板1
+		{
+			b2BodyDef ground_bdef = b2DefaultBodyDef();
+			ground_bdef.position = b2Vec2({ -5.0f, 0.0f });
+			b2Polygon ground_box = b2MakeBox(5.0f, 1.0f);
+			b2ShapeDef ground_sdef = b2DefaultShapeDef();
+			ground_sdef.material.friction = 0.6f;
+			ground_bodyId = phyWorld_1.CreateBodyPolygon(&ground_bdef, &ground_box, &ground_sdef);
+		}
+		//地板2
+		{
+			b2BodyDef ground_bdef_1 = b2DefaultBodyDef();
+			ground_bdef_1.position = b2Vec2({ 30.0f, -30.0f });
+			b2Polygon ground_box_1 = b2MakeBox(200.0f, 1.0f);
+			b2ShapeDef ground_sdef_1 = b2DefaultShapeDef();
+			ground_sdef_1.material.friction = 0.5f;
+			phyWorld_1.CreateBodyPolygon(&ground_bdef_1, &ground_box_1, &ground_sdef_1);
+		}
+		//地板3
+		{
+			b2BodyDef ground_bdef_1 = b2DefaultBodyDef();
+			ground_bdef_1.position = b2Vec2({ -70.0f, -10.0f });
+			b2Polygon ground_box_1 = b2MakeBox(1.0f, 100.0f);
+			b2ShapeDef ground_sdef_1 = b2DefaultShapeDef();
+			ground_sdef_1.material.friction = 0.5f;
+			phyWorld_1.CreateBodyPolygon(&ground_bdef_1, &ground_box_1, &ground_sdef_1);
+		}
+		//物体1
+		{
+			b2BodyDef bodyDef_1 = b2DefaultBodyDef();
+			bodyDef_1.type = b2_dynamicBody;
+			bodyDef_1.position = b2Vec2({ 0.0f, 10.0f });
+			b2Polygon dynamicBox_1 = b2MakeBox(2.0f, 2.0f);
+			b2ShapeDef shapeDef_1 = b2DefaultShapeDef();
+			shapeDef_1.density = 1.0f;
+			shapeDef_1.material.friction = 0.2f;
+			body_1_bodyId = phyWorld_1.CreateBodyPolygon(&bodyDef_1, &dynamicBox_1, &shapeDef_1);
+		}
+		//物体2
+		{
+			b2BodyDef bodyDef_2 = b2DefaultBodyDef();
+			bodyDef_2.type = b2_dynamicBody;
+			bodyDef_2.position = b2Vec2({ -2.0f, 16.0f });
+			b2Polygon dynamicBox_2 = b2MakeBox(25.0f, 3.0f);
+			b2ShapeDef shapeDef_2 = b2DefaultShapeDef();
+			shapeDef_2.density = 1.0f;
+			shapeDef_2.material.friction = 0.3f;
+			body_2_bodyId = phyWorld_1.CreateBodyPolygon(&bodyDef_2, &dynamicBox_2, &shapeDef_2);
+		}
+		//物体3
+		{
+			b2BodyDef bodyDef_3 = b2DefaultBodyDef();
+			bodyDef_3.type = b2_dynamicBody;
+			bodyDef_3.position = b2Vec2({ 8.0f, 25.0f });
+			b2Circle dynamicCircle_3;
+			dynamicCircle_3.center = { 0,0 };
+			dynamicCircle_3.radius = 4;
+			b2ShapeDef shapeDef_3 = b2DefaultShapeDef();
+			shapeDef_3.density = 1.0f;
+			shapeDef_3.material.friction = 0.3f;
+			body_3_bodyId = phyWorld_1.CreateBodyCircle(&bodyDef_3, &dynamicCircle_3, &shapeDef_3);
+		}
+		//物体4
+		{
+			b2BodyDef bodyDef = b2DefaultBodyDef();
+			bodyDef.type = b2_dynamicBody;
+			bodyDef.position = b2Vec2({ -33.0f, 3.0f });
+			b2Polygon dynamicBox = b2MakeBox(3.0f, 23.0f);
+			b2ShapeDef shapeDef = b2DefaultShapeDef();
+			shapeDef.density = 2.0f;
+			shapeDef.material.friction = 0.4f;
+			body_4_bodyId = phyWorld_1.CreateBodyPolygon(&bodyDef, &dynamicBox, &shapeDef);
+		}
+		//物体组
+		{
+			b2BodyDef bodyDef = b2DefaultBodyDef();
+			bodyDef.type = b2_dynamicBody;
+			bodyDef.position = b2Vec2({ -50.0f, 1.0f });
+			//b2Polygon dynamicBox = b2MakeBox(1.0f, 1.0f);
+			b2Circle dynamicCircle;
+			dynamicCircle.center = { 0,0 };
+			dynamicCircle.radius = 1;
+			b2ShapeDef shapeDef = b2DefaultShapeDef();
+			shapeDef.density = 2.0f;
+			shapeDef.material.friction = 0.4f;
+			for (int g = 0; g <= 100; g++)
+			{
+				for (int i = 0; i <= 15; i++)
+				{
+					bodyDef.position = b2Vec2({ -67.0f + i * 2.0f, 1.0f + g * 2.0f });
+					phyWorld_1.CreateBodyCircle(&bodyDef, &dynamicCircle, &shapeDef);
+				}
+			}
+		}
     }
 
 	void Bzd_SFML_Update() {
@@ -42,6 +160,8 @@ namespace bzd_SFML_main {
         //调试
         auto& _debugMessages = AppInit::getDebugMessages();
 
+		//窗口焦点
+		const bool isThisWindowhasFocus = _window.hasFocus();
 
         text->setFillColor(sf::Color(
             static_cast<uint8_t>(textColor[0] * 255),
@@ -49,13 +169,37 @@ namespace bzd_SFML_main {
             static_cast<uint8_t>(textColor[2] * 255)
         ));
 
+		float cameraMoveSpeed = 0.1f;
+		//逻辑
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::LShift)) { cameraMoveSpeed *= 3.0f * 1/phyWorld_1.GetCameraZoom(); }
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::A) && isThisWindowhasFocus) { phyWorld_1.MoveCamera({ -cameraMoveSpeed,0 }); }
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::D) && isThisWindowhasFocus) { phyWorld_1.MoveCamera({ cameraMoveSpeed,0 }); }
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::W) && isThisWindowhasFocus) { phyWorld_1.MoveCamera({ 0,cameraMoveSpeed }); }
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::S) && isThisWindowhasFocus) { phyWorld_1.MoveCamera({ 0,-cameraMoveSpeed }); }
+		//phyWorld_1.FollowBody(ground_bodyId);
+
+
+
+		// 物理更新
+		float deltaTime = clock.restart().asSeconds();
+		accumulator += deltaTime;
+		while (accumulator >= timeStep) {
+			b2WorldId worldId = phyWorld_1.GetWorldId();
+			b2World_Step(worldId, timeStep, subStepCount);
+			accumulator -= timeStep;
+			std::cout << deltaTime << "|物理更新" << std::endl;
+		}
 	}
 
     void Bzd_SFML_draw() {
         //窗口
         auto& _window = AppInit::getWinodw();
+		
+		//BOX2D
+		phyWorld_1.Render();
 
-        _window.draw(*text);
+		_window.draw(*text);
+
     }
 
 	//IMGUI
@@ -91,9 +235,8 @@ namespace bzd_SFML_main {
 			bool bestHoverCheck = ImGui::IsWindowHovered(
 				ImGuiHoveredFlags_ChildWindows |
 				ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
-			bool justActivated = ImGui::IsWindowAppearing();
 			bool isFocused = ImGui::IsWindowFocused();
-			if (bestHoverCheck || justActivated || isFocused)
+			if (bestHoverCheck || isFocused)
 			{
 				windowAlpha = valueChangeSmooth(10, windowAlpha, maxAlpha);
 			}
@@ -119,7 +262,6 @@ namespace bzd_SFML_main {
 			ImGui::TextColored(ImVec4(1, 1, 0, 1), u8"焦点状态:");
 			ImGui::Text(u8"聚焦(Focused): %s", isFocused ? u8"是" : u8"否");
 			ImGui::Text(u8"悬停(Hovered): %s", bestHoverCheck ? u8"是" : u8"否");
-			ImGui::Text(u8"刚出现(Appearing): %s", justActivated ? u8"是" : u8"否");
 			ImGui::NewLine();
 			ImGui::Text(u8"全局鼠标坐标 X:%d Y:%d", _globalMousePos.x, _globalMousePos.y);
 			ImGui::Text(u8"程序窗口鼠标坐标 X:%d Y:%d", _windowMousePos.x, _windowMousePos.y);
@@ -127,9 +269,9 @@ namespace bzd_SFML_main {
 			ImGui::Text(u8"程序窗口位置: (%d, %d)", _window.getPosition().x, _window.getPosition().y);
 			ImGui::NewLine();
 			ImGui::Text(u8"程序窗口大小 当前: (%d, %d)", _window.getSize().x, _window.getSize().y);
-			static float k_size = 900.0f / 1700.0f;
+			float k_size = AppInit::getK_size();
 			static int currentItem = 4;
-			static const char* items[] = { u8"1700x900",u8"1500x794" ,u8"1300x688", u8"1000x529", u8"800x423" };
+			static const char* items[] = { u8"1700x900",u8"1500x794" ,u8"1300x688", u8"1000x529", u8"800x423(默认)" };
 			ImGui::Combo(u8"程序窗口大小选择", &currentItem, items, IM_ARRAYSIZE(items));
 			static bool windowSizeChange = false;
 #ifdef _WIN32
@@ -292,13 +434,34 @@ namespace bzd_SFML_main {
 			else {
 				windowAlpha = valueChangeSmooth(20, windowAlpha, minAlpha);
 			}
-			ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"中文测试 FMYSSMGAY");
+			ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"性能:");
+			float deltaTime = clock.restart().asSeconds();
+			float fps = 1.0f / deltaTime;
+			ImGui::Text(u8"帧率(SFML): %.1f FPS", fps);
+			ImGui::Text(u8"帧率(IMGUI): %.1f FPS", ImGui::GetIO().Framerate);
 			ImGui::NewLine();
-			ImGui::DebugTextEncoding(u8"中文测试 。//；【】；了【");
-			ImGui::End();
+			ImGui::TextColored(ImVec4(0, 1, 0, 1), u8"box2d调试:");
+			b2Vec2 camera_CameraCenter = phyWorld_1.GetCameraOffset();
+			ImGui::Text(u8"相机世界坐标: (%0.1f , %0.1f)", camera_CameraCenter.x, camera_CameraCenter.y);
+			b2Vec2 body1Ps = b2Body_GetPosition(body_1_bodyId);
+			static float w_Czoom = 0.5f;
+			ImGui::SliderFloat(u8"相机缩放", &w_Czoom, 0.1f, 6.0f);
+			phyWorld_1.SetCameraZoom(w_Czoom);
+;			ImGui::Text(u8"物体1 坐标: (%0.1f , %0.1f)", body1Ps.x, body1Ps.y);
+			b2Vec2 body2Ps = b2Body_GetPosition(body_2_bodyId);
+			ImGui::Text(u8"物体2 坐标: (%0.1f , %0.1f)", body2Ps.x, body2Ps.y);
+			b2Vec2 body3Ps = b2Body_GetPosition(body_3_bodyId);
+			ImGui::Text(u8"物体3 坐标: (%0.1f , %0.1f)", body3Ps.x, body3Ps.y);
+			ImGui::NewLine();
 
+			ImGui::End();
 
 			ImGui::PopStyleVar(); // 透明度调整结尾
 		}
+	}
+
+	//程序结束
+	void Bzd_End() {
+		ImGui::SFML::Shutdown();
 	}
 }

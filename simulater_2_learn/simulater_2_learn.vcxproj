@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -129,11 +129,13 @@
   <ItemGroup>
     <ClCompile Include="include\appInit.cpp" />
     <ClCompile Include="include\bzd_SFML_Main.cpp" />
+    <ClCompile Include="include\PhysicsWorld.cpp" />
     <ClCompile Include="simulater2Main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\appInit.h" />
     <ClInclude Include="include\bzd_SFML_Main.h" />
+    <ClInclude Include="include\PhysicsWorld.h" />
     <ClInclude Include="include\S2L_includeAll.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

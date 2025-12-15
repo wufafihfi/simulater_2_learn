@@ -5,8 +5,15 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <vector>
+#include <memory>
+#include <cstdint>
+#include <memory>
+
+#include <box2d/box2d.h>
 
 #include "appInit.h"
+#include "PhysicsWorld.h"
 
 namespace bzd_SFML_main {
 
@@ -16,6 +23,8 @@ namespace bzd_SFML_main {
 
 	void UIready();
 	void UIuodata();
+
+	void Bzd_End();
 }
 
 #endif#pragma once

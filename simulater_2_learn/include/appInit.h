@@ -21,6 +21,7 @@ namespace AppInit {
 
 	std::vector<std::string>& getDebugMessages();
 	sf::RenderWindow& getWinodw();
+	float& getK_size();
 
 	struct BasePath {
 		std::string basepath_A;
@@ -38,6 +39,8 @@ namespace AppInit {
 	void InitFile_IMGUI();
 
 	sf::Font& getBasefont();
+
+	bool IsWindows10OrGreaterSimple();
 
 }
 

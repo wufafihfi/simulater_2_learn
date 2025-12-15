@@ -13,6 +13,11 @@ namespace AppInit {
         return window;
     }
 
+    float k_size = 900.0f / 1700.0f;// 窗口固定缩放比
+    float& getK_size() {
+        return k_size;
+    }
+
     // 程序目录路径
     BasePath basePath;
     BasePath& getProgramDirectoryPath() {
@@ -85,6 +90,30 @@ namespace AppInit {
             std::string path = szFilePath;
             return path;
         }
+    }
+
+    // 版本检测
+    bool IsWindows10OrGreaterSimple() {
+        OSVERSIONINFOEXW osvi = { sizeof(osvi) };
+
+        // 设置要检测的版本
+        osvi.dwMajorVersion = 10;
+        osvi.dwMinorVersion = 0;
+        osvi.dwBuildNumber = 0;
+
+        // 设置条件掩码
+        DWORDLONG dwlConditionMask = 0;
+
+        // 设置主版本号条件：大于等于
+        VER_SET_CONDITION(dwlConditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
+
+        // 设置次版本号条件：大于等于
+        VER_SET_CONDITION(dwlConditionMask, VER_MINORVERSION, VER_GREATER_EQUAL);
+
+        // 验证版本信息
+        return VerifyVersionInfoW(&osvi,
+            VER_MAJORVERSION | VER_MINORVERSION,
+            dwlConditionMask) != FALSE;
     }
 #else
     std::string getExecutablePath(int mode) {
