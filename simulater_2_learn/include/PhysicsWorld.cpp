@@ -44,7 +44,7 @@ namespace bzd_Phy {
     b2WorldId& PhysicsWorld::GetWorldId() {
         return worldId;
     }
-
+    
     // 坐标转换 应用相机
     b2Vec2 PhysicsWorld::ToBox2D(sf::Vector2f screenPos) {
         // 2. 视图中心作为原点：从视图坐标转换到以视图中心为原点的坐标
