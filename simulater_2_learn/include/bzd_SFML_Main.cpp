@@ -14,6 +14,9 @@ namespace bzd_SFML_main {
 	int subStepCount = 4;
 	b2WorldDef worldDef = b2DefaultWorldDef();
 	bzd_Phy::PhysicsWorld phyWorld_1(&worldDef,{ 0.0f, -10.0f });
+	float w_Czoom = 0.5f;
+	float maxZoom = 7.0f;
+	float minZoom = 0.01f;
 
     //图形元素（智能指针管理）
     std::unique_ptr<sf::Text> text;
@@ -136,8 +139,9 @@ namespace bzd_SFML_main {
 			dynamicCircle.center = { 0,0 };
 			dynamicCircle.radius = 1;
 			b2ShapeDef shapeDef = b2DefaultShapeDef();
-			shapeDef.density = 2.0f;
-			shapeDef.material.friction = 0.4f;
+			shapeDef.density = 0.6f;
+			shapeDef.material.friction = 0.1f;
+			shapeDef.material.restitution = 0.5f;
 			for (int g = 0; g <= 100; g++)
 			{
 				for (int i = 0; i <= 15; i++)
@@ -149,35 +153,113 @@ namespace bzd_SFML_main {
 		}
     }
 
+	void Bzd_SFML_Event(std::optional<sf::Event> _event) {
+		//窗口
+		auto& _window = AppInit::getWinodw();
+		//鼠标
+		auto& _globalMousePos = AppInit::getGlobalMousePos();
+		auto& _windowMousePos = AppInit::getWindowMousePos();
+		//颜色
+		auto& backColor = AppInit::getBackColor();
+		//调试
+		auto& _debugMessages = AppInit::getDebugMessages();
+		//窗口焦点
+		const bool isThisWindowhasFocus = _window.hasFocus();
+
+		//控制参数
+		float zoomSpeed = 0.1f;
+		//鼠标控制缩放
+		if (_event->is<sf::Event::MouseWheelScrolled>())
+		{
+			// 获取鼠标滚轮事件
+			const auto& wheelEvent = _event->getIf<sf::Event::MouseWheelScrolled>();
+
+			if (wheelEvent)
+			{
+				// 判断是垂直滚轮还是水平滚轮
+				if (wheelEvent->wheel == sf::Mouse::Wheel::Vertical)
+				{
+					// 向上滚动 - 放大 (delta > 0)
+					if (wheelEvent->delta > 0)
+					{
+						w_Czoom += zoomSpeed *  w_Czoom / 2.0f;
+						if (w_Czoom > maxZoom) w_Czoom = maxZoom;
+					}
+					// 向下滚动 - 缩小 (delta < 0)
+					else if (wheelEvent->delta < 0)
+					{
+						w_Czoom -= zoomSpeed * w_Czoom / 2.0f;
+						if (w_Czoom < minZoom) w_Czoom = minZoom;
+					}
+				}
+			}
+		}
+	}
+
 	void Bzd_SFML_Update() {
-        //窗口
-        auto& _window = AppInit::getWinodw();
-        //鼠标
-        auto& _globalMousePos = AppInit::getGlobalMousePos();
-        auto& _windowMousePos = AppInit::getWindowMousePos();
-        //颜色
-        auto& backColor = AppInit::getBackColor();
-        //调试
-        auto& _debugMessages = AppInit::getDebugMessages();
+		//窗口
+		auto& _window = AppInit::getWinodw();
+		//鼠标
+		auto& _globalMousePos = AppInit::getGlobalMousePos();
+		auto& _windowMousePos = AppInit::getWindowMousePos();
+		//颜色
+		auto& backColor = AppInit::getBackColor();
+		//调试
+		auto& _debugMessages = AppInit::getDebugMessages();
 
 		//窗口焦点
 		const bool isThisWindowhasFocus = _window.hasFocus();
 
-        text->setFillColor(sf::Color(
-            static_cast<uint8_t>(textColor[0] * 255),
-            static_cast<uint8_t>(textColor[1] * 255),
-            static_cast<uint8_t>(textColor[2] * 255)
-        ));
+		text->setFillColor(sf::Color(
+			static_cast<uint8_t>(textColor[0] * 255),
+			static_cast<uint8_t>(textColor[1] * 255),
+			static_cast<uint8_t>(textColor[2] * 255)
+		));
 
 		float cameraMoveSpeed = 0.1f;
-		//逻辑
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::LShift)) { cameraMoveSpeed *= 3.0f * 1/phyWorld_1.GetCameraZoom(); }
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::A) && isThisWindowhasFocus) { phyWorld_1.MoveCamera({ -cameraMoveSpeed,0 }); }
+		//控制逻辑
+		//键盘移动相机
+		/*
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::LShift)) { cameraMoveSpeed *= 5.0f * 1 / phyWorld_1.GetCameraZoom(); }
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::A) && isThisWindowhasFocus) { phyWorld_1.MoveCamera({ -cameraMoveSpeed ,0 }); }
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::D) && isThisWindowhasFocus) { phyWorld_1.MoveCamera({ cameraMoveSpeed,0 }); }
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::W) && isThisWindowhasFocus) { phyWorld_1.MoveCamera({ 0,cameraMoveSpeed }); }
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::S) && isThisWindowhasFocus) { phyWorld_1.MoveCamera({ 0,-cameraMoveSpeed }); }
-		//phyWorld_1.FollowBody(ground_bodyId);
+		//*/
 
+		///*
+		float Force_K = 5.0f;
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::A) && isThisWindowhasFocus) { 
+			b2Body_ApplyForceToCenter(
+				body_3_bodyId,
+				{ b2Body_GetMass(body_3_bodyId) * b2World_GetGravity(phyWorld_1.GetWorldId()).y * Force_K,0.0f },
+				true
+			);
+		}
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::D) && isThisWindowhasFocus) {
+			b2Body_ApplyForceToCenter(
+				body_3_bodyId,
+				{ b2Body_GetMass(body_3_bodyId) * b2World_GetGravity(phyWorld_1.GetWorldId()).y * -Force_K,0.0f },
+				true
+			);
+		}
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::W) && isThisWindowhasFocus) {
+			b2Body_ApplyForceToCenter(
+				body_3_bodyId,
+				{ 0.0f,b2Body_GetMass(body_3_bodyId) * b2World_GetGravity(phyWorld_1.GetWorldId()).y * -Force_K },
+				true
+			);
+		}
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::S) && isThisWindowhasFocus) {
+			b2Body_ApplyForceToCenter(
+				body_3_bodyId,
+				{ 0.0f,b2Body_GetMass(body_3_bodyId) * b2World_GetGravity(phyWorld_1.GetWorldId()).y * Force_K },
+				true
+			);
+		}
+		//*/
+
+		phyWorld_1.FollowBody(body_3_bodyId);
 
 
 		// 物理更新
@@ -197,6 +279,7 @@ namespace bzd_SFML_main {
 		
 		//BOX2D
 		phyWorld_1.Render();
+		phyWorld_1.DrawBodyVelosity(body_3_bodyId);
 
 		_window.draw(*text);
 
@@ -270,7 +353,7 @@ namespace bzd_SFML_main {
 			ImGui::NewLine();
 			ImGui::Text(u8"程序窗口大小 当前: (%d, %d)", _window.getSize().x, _window.getSize().y);
 			float k_size = AppInit::getK_size();
-			static int currentItem = 4;
+			static int currentItem = 0;
 			static const char* items[] = { u8"1700x900",u8"1500x794" ,u8"1300x688", u8"1000x529", u8"800x423(默认)" };
 			ImGui::Combo(u8"程序窗口大小选择", &currentItem, items, IM_ARRAYSIZE(items));
 			static bool windowSizeChange = false;
@@ -292,7 +375,7 @@ namespace bzd_SFML_main {
 				sf::Vector2u windowSIze = sf::Vector2u(1700, 1700 * k_size);
 				if (desktopMode.size.x <= windowSIze.x || desktopMode.size.y <= windowSIze.y) {
 					_debugMessages.push_back(u8"窗口大小设置失败,屏幕(虚拟)不够大");
-					currentItem = 4;
+					currentItem = 1;
 					break;
 				}
 				if (!(_window.getSize().x == windowSIze.x && _window.getSize().y == windowSIze.y))
@@ -310,7 +393,7 @@ namespace bzd_SFML_main {
 				sf::Vector2u windowSIze = sf::Vector2u(1500, 1500 * k_size);
 				if (desktopMode.size.x <= windowSIze.x || desktopMode.size.y <= windowSIze.y) {
 					_debugMessages.push_back(u8"窗口大小设置失败,屏幕(虚拟)不够大");
-					currentItem = 4;
+					currentItem = 2;
 					break;
 				}
 				if (!(_window.getSize().x == windowSIze.x && _window.getSize().y == windowSIze.y))
@@ -328,7 +411,7 @@ namespace bzd_SFML_main {
 				sf::Vector2u windowSIze = sf::Vector2u(1300, 1300 * k_size);
 				if (desktopMode.size.x <= windowSIze.x || desktopMode.size.y <= windowSIze.y) {
 					_debugMessages.push_back(u8"窗口大小设置失败,屏幕(虚拟)不够大");
-					currentItem = 4;
+					currentItem = 3;
 					break;
 				}
 				if (!(_window.getSize().x == windowSIze.x && _window.getSize().y == windowSIze.y))
@@ -444,8 +527,7 @@ namespace bzd_SFML_main {
 			b2Vec2 camera_CameraCenter = phyWorld_1.GetCameraOffset();
 			ImGui::Text(u8"相机世界坐标: (%0.1f , %0.1f)", camera_CameraCenter.x, camera_CameraCenter.y);
 			b2Vec2 body1Ps = b2Body_GetPosition(body_1_bodyId);
-			static float w_Czoom = 0.5f;
-			ImGui::SliderFloat(u8"相机缩放", &w_Czoom, 0.1f, 6.0f);
+			ImGui::SliderFloat(u8"相机缩放", &w_Czoom, minZoom, maxZoom);
 			phyWorld_1.SetCameraZoom(w_Czoom);
 ;			ImGui::Text(u8"物体1 坐标: (%0.1f , %0.1f)", body1Ps.x, body1Ps.y);
 			b2Vec2 body2Ps = b2Body_GetPosition(body_2_bodyId);

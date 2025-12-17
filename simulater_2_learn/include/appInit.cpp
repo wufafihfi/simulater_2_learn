@@ -146,12 +146,16 @@ namespace AppInit {
         static std::string layoutiniPath = _basepath.basepath_W + u8"\\config\\imgui_layout.ini";
         io.IniFilename = layoutiniPath.c_str();
 
+        sf::VideoMode desktopMode_DPI = sf::VideoMode::getDesktopMode();
+        sf::Vector2 windowSize = window.getSize();
+        float K_DPI_text = 13.0f * (desktopMode_DPI.size.x / windowSize.x);
+
         // 清除默认字体
         io.Fonts->Clear();
         std::string ttfPath = _basepath.basepath_W + u8"\\fonts\\SimHei.ttf";
         ImFont* chineseFont = io.Fonts->AddFontFromFileTTF(
             ttfPath.c_str(),           // 字体文件路径
-            13.0f /* dpiScale*/,                     // 字体大小
+            18.0f /* dpiScale*/,                     // 字体大小
             nullptr,                   // 字体配置
             io.Fonts->GetGlyphRangesChineseFull()  // 中文字符集
         );

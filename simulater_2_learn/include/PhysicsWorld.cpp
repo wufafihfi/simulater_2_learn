@@ -111,10 +111,10 @@ namespace bzd_Phy {
     void PhysicsWorld::FollowBody(b2BodyId& body) {
         b2Vec2 targetPos = b2Body_GetPosition(body);
         b2Vec2 currentOffset = GetCameraOffset();
-        b2Vec2 desiredOffset = currentOffset - targetPos;
+        b2Vec2 desiredOffset = targetPos - currentOffset;
 
         float followSpeed = 0.1f;
-        b2Vec2 newOffset = currentOffset + (desiredOffset - currentOffset) * followSpeed;
+        b2Vec2 newOffset = currentOffset + desiredOffset * followSpeed;
 
         SetCameraOffset(newOffset);
     }
@@ -133,6 +133,7 @@ namespace bzd_Phy {
         if (!window) return;
 
         //DrawTest_CoordinateTransformation();
+        DrawCameraCenter();
         DrawCoordinateSystemGrid();
 
         // 遍历所有物体
@@ -306,6 +307,36 @@ namespace bzd_Phy {
             sf::Vertex({yEnd, sf::Color::Green})
         };
         window->draw(yAxis, 2, sf::PrimitiveType::Lines);
+    }
+
+    void PhysicsWorld::DrawCameraCenter() {
+        sf::Vector2f viewSize = view.getSize();
+        sf::Vector2f viewCenter = view.getCenter();
+
+        sf::Vertex VAxis[] = {
+            sf::Vertex({{viewCenter.x,0}, sf::Color::White }),
+            sf::Vertex({{viewCenter.x,viewSize.y}, sf::Color::White})
+        };
+        window->draw(VAxis, 2, sf::PrimitiveType::Lines);
+
+        sf::Vertex HAxis[] = {
+             sf::Vertex({{0,viewCenter.y}, sf::Color::White }),
+            sf::Vertex({{viewSize.x,viewCenter.y}, sf::Color::White})
+        };
+        window->draw(HAxis, 2, sf::PrimitiveType::Lines);
+    }
+
+    void PhysicsWorld::DrawBodyVelosity(b2BodyId& body) {
+        b2Transform transform = b2Body_GetTransform(body);
+        b2Vec2 velosity = b2Body_GetLinearVelocity(body);
+
+        sf::Vector2f lineStart = ToScreen(transform.p);
+        sf::Vector2f lineEndScreen = ToScreen(transform.p + velosity);
+        sf::Vertex Line_v[] = {
+        sf::Vertex({lineStart, sf::Color::White }),
+        sf::Vertex({lineEndScreen, sf::Color::White})
+        };
+        window->draw(Line_v, 2, sf::PrimitiveType::Lines);
     }
 
     // 坐标转换测试函数

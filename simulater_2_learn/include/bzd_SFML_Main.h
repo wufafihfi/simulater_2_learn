@@ -22,6 +22,7 @@ namespace bzd_SFML_main {
 	void Bzd_SFML_draw();
 
 	void UIready();
+	void Bzd_SFML_Event(std::optional<sf::Event> _event);
 	void UIuodata();
 
 	void Bzd_End();

@@ -35,7 +35,7 @@ int main() {
         L"SFML&IMGUI 进阶学习项目",
         sf::Style::Titlebar | sf::Style::Close);
 
-    //sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();sf::Style::Titlebar | sf::Style::Close
+    sf::VideoMode desktopMode_DPI = sf::VideoMode::getDesktopMode();
 #ifdef _WIN32
     sf::VideoMode desktopMode = sf::VideoMode(sf::Vector2u(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)));
 #endif
@@ -81,6 +81,8 @@ int main() {
             if (event->is<sf::Event::Closed>()) {
                 window.close();
             }
+
+            bzd_SFML_main::Bzd_SFML_Event(event);
 
             // 将事件传递给 ImGui - 使用正确的命名空间
             ImGui::SFML::ProcessEvent(window, *event);

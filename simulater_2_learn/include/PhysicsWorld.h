@@ -51,11 +51,13 @@ namespace bzd_Phy {
         void MoveCamera(b2Vec2 delta);
         void ZoomCamera(float factor);
         void FollowBody(b2BodyId& body);
+        void DrawBodyVelosity(b2BodyId& body);
 
     private:
         // ∏®÷˙ªÊ÷∆∫Ø ˝
         void DrawBody(b2BodyId& body);
         void DrawCoordinateSystemGrid();
+        void DrawCameraCenter();
         // ªÊ÷∆≤‚ ‘
         void DrawTest_CoordinateTransformation();
     };
