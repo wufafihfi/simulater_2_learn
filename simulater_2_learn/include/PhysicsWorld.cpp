@@ -17,6 +17,12 @@ namespace bzd_Phy {
 
     void PhysicsWorld::setView(sf::View _view) {
         view = _view;
+        if (drawBuffer.resize(sf::Vector2u(_view.getSize()))) {
+            std::cout << "绘制缓冲区设置成功!" << std::endl;
+        }
+        else {
+            std::cout << "绘制缓冲区设置失败!" << std::endl;
+        }
     }
 
     void PhysicsWorld::Initialize(b2WorldDef* _worldDef) {
@@ -27,22 +33,30 @@ namespace bzd_Phy {
         b2World_Step(worldId, timeStep, subStepCount);
     }
 
-    b2BodyId PhysicsWorld::CreateBodyPolygon(b2BodyDef* _BodyDef, b2Polygon* _Box, b2ShapeDef* _shapeDef) {
+    b2BodyId PhysicsWorld::CreateBodyPolygon(b2BodyDef* _BodyDef, b2Polygon* _Box, b2ShapeDef* _shapeDef, bodyData Data) {
+        DataPoor.push_back(Data);
+        _BodyDef->userData = &DataPoor.back();
         b2BodyId bodyId = b2CreateBody(worldId, _BodyDef);
         b2CreatePolygonShape(bodyId, _shapeDef, _Box);
-        bodyId_s.push_back(bodyId);
+        DataPoor.back().body_id = bodyId;
         return bodyId;
     }
 
-    b2BodyId PhysicsWorld::CreateBodyCircle(b2BodyDef* _BodyDef, b2Circle* _circle, b2ShapeDef* _shapeDef) {
+    b2BodyId PhysicsWorld::CreateBodyCircle(b2BodyDef* _BodyDef, b2Circle* _circle, b2ShapeDef* _shapeDef, bodyData Data) {
+        DataPoor.push_back(Data);
+        _BodyDef->userData = &DataPoor.back();
         b2BodyId bodyId = b2CreateBody(worldId, _BodyDef);
         b2CreateCircleShape(bodyId, _shapeDef, _circle);
-        bodyId_s.push_back(bodyId);
+        DataPoor.back().body_id = bodyId;
         return bodyId;
     }
 
     b2WorldId& PhysicsWorld::GetWorldId() {
         return worldId;
+    }
+
+    long long PhysicsWorld::GetDataPoorSize() {
+        return DataPoor.size();
     }
     
     // 坐标转换 应用相机
@@ -81,6 +95,8 @@ namespace bzd_Phy {
     b2Vec2 PhysicsWorld::ToBox2D_L(sf::Vector2f screenPos) {
         // 2. 视图中心作为原点：从视图坐标转换到以视图中心为原点的坐标
         sf::Vector2f centeredViewPos = screenPos ;
+        //sf::Vector2f viewCenter = view.getCenter();
+        //sf::Vector2f centeredViewPos = viewCenter - screenPos;
 
         // 3. Y轴翻转（SFML Y向下，Box2D Y向上）
         centeredViewPos.y = -centeredViewPos.y;
@@ -102,6 +118,8 @@ namespace bzd_Phy {
         centeredViewPos.y = -centeredViewPos.y;
 
         // 3. 从中心相对坐标转换到视图绝对坐标
+        //sf::Vector2f viewCenter = view.getCenter();
+        //sf::Vector2f viewPos = centeredViewPos + viewCenter;
         sf::Vector2f viewPos = centeredViewPos;
 
         // 4. 将视图坐标转换为窗口像素坐标
@@ -119,6 +137,73 @@ namespace bzd_Phy {
         SetCameraOffset(newOffset);
     }
 
+    // 多边形顶点计算
+    sf::ConvexShape PhysicsWorld::PointConput(bodyData& bodyData) {
+        b2Transform transform = b2Body_GetTransform(bodyData.body_id);
+        float _cos = transform.q.c;
+        float _sin = transform.q.s;
+
+        b2ShapeId shapeId;
+        b2Body_GetShapes(bodyData.body_id, &shapeId, 1);
+        b2Polygon _polygon = b2Shape_GetPolygon(shapeId);
+        sf::ConvexShape polygon(_polygon.count);
+
+        // 修复顶点计算
+        for (int i = 0; i < _polygon.count; i++) {
+            // 正确的旋转计算
+            b2Vec2 vertex = _polygon.vertices[i];
+            b2Vec2 rotated;
+            rotated.x = _cos * vertex.x - _sin * vertex.y;
+            rotated.y = _sin * vertex.x + _cos * vertex.y;
+
+            // 世界坐标
+            b2Vec2 worldVertex = transform.p + rotated;
+
+            // 转换到屏幕坐标
+            sf::Vector2f screenPos = ToScreen(worldVertex);
+            polygon.setPoint(i, screenPos);
+        }
+
+        return polygon;
+    }
+    /*   //// 有BUG的函数 现已有更好的方法替代  ////
+    // 多边形顶转换 B2->SF
+    sf::ConvexShape PhysicsWorld::PointConput_B2SF(bodyData& bodyData) {
+        if (!b2Body_IsValid(bodyData.body_id)) {
+            return sf::ConvexShape();  // 返回空形状
+        }
+
+        b2Transform transform = b2Body_GetTransform(bodyData.body_id);
+        float _cos = transform.q.c;
+        float _sin = transform.q.s;
+
+        b2ShapeId shapeId;
+        b2Body_GetShapes(bodyData.body_id, &shapeId, 1);
+        b2Polygon _polygon = b2Shape_GetPolygon(shapeId);
+
+        sf::ConvexShape polygon(_polygon.count);
+
+        // 修复顶点计算
+        for (int i = 0; i < _polygon.count; i++) {
+            // 正确的旋转计算
+            b2Vec2 vertex = _polygon.vertices[i];
+            b2Vec2 rotated;
+            rotated.x = _cos * vertex.x - _sin * vertex.y;
+            rotated.y = _sin * vertex.x + _cos * vertex.y;
+
+            // 世界坐标
+            b2Vec2 worldVertex = rotated;
+
+            // 转换到屏幕坐标
+            sf::Vector2f screenPos = ToScreen_L(worldVertex);
+            polygon.setPoint(i, screenPos);
+        }
+        polygon.setPosition(ToScreen(transform.p));
+
+        return polygon;
+    }
+    */
+
     // 获取摄像机参数
     b2Vec2 PhysicsWorld::GetCameraOffset() { return cameraOffset; }
     float PhysicsWorld::GetCameraZoom() { return cameraZoom; }
@@ -128,53 +213,72 @@ namespace bzd_Phy {
     void PhysicsWorld::MoveCamera(b2Vec2 delta) { cameraOffset += delta; }
     void PhysicsWorld::ZoomCamera(float factor) { cameraZoom *= factor; }
 
-    // 渲染函数（保持简单，不修改视图）
+    void PhysicsWorld::drawbegin() {
+        drawBuffer.clear();
+    }
+
+    // 渲染
     void PhysicsWorld::Render() {
-        if (!window) return;
 
         //DrawTest_CoordinateTransformation();
         DrawCameraCenter();
         DrawCoordinateSystemGrid();
 
+        // 检查
+        DataPoor.erase(
+            std::remove_if(DataPoor.begin(), DataPoor.end(),
+                [](bodyData data) { return !b2Body_IsValid(data.body_id); }),
+            DataPoor.end()
+        );
         // 遍历所有物体
-        for (auto& bodyId : bodyId_s) {
-            DrawBody(bodyId);
+        for (auto& data : DataPoor) {
+            DrawBody(data);
         }
     }
 
-    void PhysicsWorld::DrawBody(b2BodyId& body) {
-        b2Transform transform = b2Body_GetTransform(body);
+    void PhysicsWorld::Display() {
+        sf::Sprite sprite(drawBuffer.getTexture());
+        sf::FloatRect textureRect({ 0, 0 },
+            { static_cast<float>(drawBuffer.getSize().x),
+             static_cast<float>(drawBuffer.getSize().y) });
+
+        // 将纹理矩形上下翻转
+        sprite.setTextureRect(sf::IntRect(
+            { 0,
+            static_cast<int>(textureRect.size.y) },  // 从底部开始
+            { static_cast<int>(textureRect.size.x),
+            static_cast<int>(-textureRect.size.y) }  // 负高度表示翻转
+        ));
+        window->draw(sprite);
+    }
+
+    bool PhysicsWorld::bodyIdStatu(b2BodyId& body) {
+        if (b2Body_IsValid(body)) {
+            return true;
+        }
+        return false;
+    }
+
+    void PhysicsWorld::DrawBody(bodyData& bodyData) {
+        if (!b2Body_IsValid(bodyData.body_id)) {
+            return;
+        }
+
+        b2Transform transform = b2Body_GetTransform(bodyData.body_id);
         float _cos = transform.q.c;
         float _sin = transform.q.s;
 
-        int32_t shapeCount = b2Body_GetShapeCount(body);
+        int32_t shapeCount = b2Body_GetShapeCount(bodyData.body_id);
         b2ShapeId shapeId;
         if (shapeCount > 0) {
-            b2Body_GetShapes(body, &shapeId, 1);
+            b2Body_GetShapes(bodyData.body_id, &shapeId, 1);
             b2ShapeType shapeType = b2Shape_GetType(shapeId);
 
             if (shapeType == b2_polygonShape) {
-                b2Polygon _polygon = b2Shape_GetPolygon(shapeId);
-                sf::ConvexShape polygon(_polygon.count);
+                sf::ConvexShape polygon = PointConput(bodyData);
                 polygon.setOutlineThickness(-2.0f);
 
-                // 修复顶点计算
-                for (int i = 0; i < _polygon.count; i++) {
-                    // 正确的旋转计算
-                    b2Vec2 vertex = _polygon.vertices[i];
-                    b2Vec2 rotated;
-                    rotated.x = _cos * vertex.x - _sin * vertex.y;
-                    rotated.y = _sin * vertex.x + _cos * vertex.y;
-
-                    // 世界坐标
-                    b2Vec2 worldVertex = transform.p + rotated;
-
-                    // 转换到屏幕坐标
-                    sf::Vector2f screenPos = ToScreen(worldVertex);
-                    polygon.setPoint(i, screenPos);
-                }
-
-                if (b2Body_GetType(body) == b2_dynamicBody) {
+                if (b2Body_GetType(bodyData.body_id) == b2_dynamicBody) {
                     polygon.setFillColor(sf::Color(200, 100, 100, 200));
                     polygon.setOutlineColor(sf::Color(220, 120, 120, 200));
                 }
@@ -183,13 +287,13 @@ namespace bzd_Phy {
                     polygon.setOutlineColor(sf::Color(120, 120, 120, 200));
                 }
 
-                window->draw(polygon);
+                drawBuffer.draw(polygon);
             }
 
             if (shapeType == b2_circleShape) {
                 sf::Color lineColor = sf::Color(200, 100, 100, 200);
                 sf::Color fillColor = sf::Color(220, 120, 120, 200);
-                if (b2Body_GetType(body) != b2_dynamicBody) {
+                if (b2Body_GetType(bodyData.body_id) != b2_dynamicBody) {
                     lineColor = sf::Color(100, 100, 100, 200);
                     fillColor = sf::Color(120, 120, 120, 200);
                 }
@@ -206,7 +310,7 @@ namespace bzd_Phy {
                 circle.setFillColor(fillColor);
                 circle.setOutlineColor(lineColor);
                 circle.setOutlineThickness(-2.0f);
-                window->draw(circle);
+                drawBuffer.draw(circle);
 
                 // 方向线
                 b2Vec2 lineEnd = b2Vec2({ _circle.radius, 0 });
@@ -221,7 +325,7 @@ namespace bzd_Phy {
                     sf::Vertex({lineStart, lineColor}),
                     sf::Vertex({lineEndScreen, lineColor })
                 };
-                window->draw(line, 2, sf::PrimitiveType::Lines);
+                drawBuffer.draw(line, 2, sf::PrimitiveType::Lines);
             }
         }
     }
@@ -273,7 +377,7 @@ namespace bzd_Phy {
                 sf::Vertex({screenStart, gridColor}),
                 sf::Vertex({screenEnd, gridColor})
             };
-            window->draw(line, 2, sf::PrimitiveType::Lines);
+            drawBuffer.draw(line, 2, sf::PrimitiveType::Lines);
         }
 
         // 绘制水平线
@@ -285,7 +389,7 @@ namespace bzd_Phy {
                 sf::Vertex({screenStart, gridColor}),
                 sf::Vertex({screenEnd, gridColor})
             };
-            window->draw(line, 2, sf::PrimitiveType::Lines);
+            drawBuffer.draw(line, 2, sf::PrimitiveType::Lines);
         }
 
         // X轴（红色）- 绘制在可见区域的中间
@@ -296,7 +400,7 @@ namespace bzd_Phy {
             sf::Vertex({xStart, sf::Color::Red}),
             sf::Vertex({xEnd, sf::Color::Red})
         };
-        window->draw(xAxis, 2, sf::PrimitiveType::Lines);
+        drawBuffer.draw(xAxis, 2, sf::PrimitiveType::Lines);
 
         // Y轴（绿色）- 绘制在可见区域的中间
         float xForYAxis = (left + right) / 2;
@@ -306,7 +410,7 @@ namespace bzd_Phy {
             sf::Vertex({yStart, sf::Color::Green}),
             sf::Vertex({yEnd, sf::Color::Green})
         };
-        window->draw(yAxis, 2, sf::PrimitiveType::Lines);
+        drawBuffer.draw(yAxis, 2, sf::PrimitiveType::Lines);
     }
 
     void PhysicsWorld::DrawCameraCenter() {
@@ -317,16 +421,20 @@ namespace bzd_Phy {
             sf::Vertex({{viewCenter.x,0}, sf::Color::White }),
             sf::Vertex({{viewCenter.x,viewSize.y}, sf::Color::White})
         };
-        window->draw(VAxis, 2, sf::PrimitiveType::Lines);
+        drawBuffer.draw(VAxis, 2, sf::PrimitiveType::Lines);
 
         sf::Vertex HAxis[] = {
              sf::Vertex({{0,viewCenter.y}, sf::Color::White }),
             sf::Vertex({{viewSize.x,viewCenter.y}, sf::Color::White})
         };
-        window->draw(HAxis, 2, sf::PrimitiveType::Lines);
+        drawBuffer.draw(HAxis, 2, sf::PrimitiveType::Lines);
     }
 
     void PhysicsWorld::DrawBodyVelosity(b2BodyId& body) {
+        if (!b2Body_IsValid(body)) {
+            return;
+        }
+
         b2Transform transform = b2Body_GetTransform(body);
         b2Vec2 velosity = b2Body_GetLinearVelocity(body);
 
@@ -336,7 +444,7 @@ namespace bzd_Phy {
         sf::Vertex({lineStart, sf::Color::White }),
         sf::Vertex({lineEndScreen, sf::Color::White})
         };
-        window->draw(Line_v, 2, sf::PrimitiveType::Lines);
+        drawBuffer.draw(Line_v, 2, sf::PrimitiveType::Lines);
     }
 
     // 坐标转换测试函数
@@ -347,7 +455,7 @@ namespace bzd_Phy {
             sf::Vertex({lineStart, sf::Color::Green}),
             sf::Vertex({lineEndScreen, sf::Color::Green })
         };
-        window->draw(line, 4, sf::PrimitiveType::Lines);
+        drawBuffer.draw(line, 4, sf::PrimitiveType::Lines);
 
         sf::Vector2f lineStart1 = ToScreen({ 0,0 });
         sf::Vector2f lineEndScreen1 = ToScreen(ToBox2D(view.getSize()));
@@ -355,6 +463,135 @@ namespace bzd_Phy {
             sf::Vertex({lineStart1, sf::Color::Red}),
             sf::Vertex({lineEndScreen1, sf::Color::Red })
         };
-        window->draw(line1, 5, sf::PrimitiveType::Lines);
+        drawBuffer.draw(line1, 5, sf::PrimitiveType::Lines);
+    }
+
+    void PhysicsWorld::DrawTest_PointShow_WINDOW(sf::Vector2f p) {
+        /*
+        sf::Vector2f lineStart1 = p;
+        sf::Vector2f lineEndScreen1 = ToScreen(ToBox2D(view.getSize()));
+        sf::Vertex line1[] = {
+            sf::Vertex({lineStart1, sf::Color::Red}),
+            sf::Vertex({lineEndScreen1, sf::Color::Red })
+        };
+        drawBuffer.draw(line1, 5, sf::PrimitiveType::Lines);
+        */
+
+        sf::CircleShape circle(10);
+        circle.setOrigin({ 10,10 });
+        circle.setPosition(p);
+        circle.setFillColor(sf::Color(200, 200, 0, 100));
+        circle.setOutlineColor(sf::Color(255, 255, 0, 100));
+        circle.setOutlineThickness(-2.0f);
+        //std::cout << " s" << std::endl;
+        window->draw(circle);
+    }
+    void PhysicsWorld::DrawTest_PointShow_DrawBuffer(sf::Vector2f p) {
+        /*
+        sf::Vector2f lineStart1 = p;
+        sf::Vector2f lineEndScreen1 = ToScreen(ToBox2D(view.getSize()));
+        sf::Vertex line1[] = {
+            sf::Vertex({lineStart1, sf::Color::Red}),
+            sf::Vertex({lineEndScreen1, sf::Color::Red })
+        };
+        drawBuffer.draw(line1, 5, sf::PrimitiveType::Lines);
+        */
+
+        sf::CircleShape circle(30);
+        circle.setOrigin({ 30,30 });
+        circle.setPosition(p);
+        circle.setFillColor(sf::Color(200, 200, 0, 100));
+        circle.setOutlineColor(sf::Color(255, 255, 0, 100));
+        circle.setOutlineThickness(-2.0f);
+        //std::cout << " s" << std::endl;
+        drawBuffer.draw(circle);
+    }
+
+    // 叉积辅助函数
+    float crossProduct(sf::Vector2f& a, sf::Vector2f& b, sf::Vector2f& p) {
+        return (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
+    }
+    // 矩形检测
+    bool pointInConvexPolygon(sf::ConvexShape& shape, sf::Vector2f& point) {
+        std::size_t pointCount = shape.getPointCount();
+        if (pointCount < 3) return false;
+
+        sf::Transform transform = shape.getTransform();
+
+        // 获取第一个变换后的顶点作为参考
+        sf::Vector2f p0 = transform.transformPoint(shape.getPoint(0));
+        sf::Vector2f p1, p2;
+
+        // 预先计算第一个边的方向作为参考符号
+        p1 = transform.transformPoint(shape.getPoint(1));
+        float referenceSign = crossProduct(p0, p1, point);
+
+        // 检查所有边是否保持相同的方向（符号）
+        for (std::size_t i = 1; i < pointCount; ++i) {
+            std::size_t next = (i + 1) % pointCount;
+            p1 = transform.transformPoint(shape.getPoint(i));
+            p2 = transform.transformPoint(shape.getPoint(next));
+
+            float currentSign = crossProduct(p1, p2, point);
+
+            // 如果符号不同，点在多边形外
+            if (referenceSign * currentSign < 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // 屏幕物体选取
+    bodyData PhysicsWorld::screenBodySelect(sf::Vector2f Point) {
+        //DrawTest_PointShow_DrawBuffer(Point);
+        for (auto& data : DataPoor) {
+            if (!b2Body_IsValid(data.body_id)) {
+                continue;
+            }
+
+            b2Transform transform = b2Body_GetTransform(data.body_id);
+            int32_t shapeCount = b2Body_GetShapeCount(data.body_id);
+            b2ShapeId shapeId;
+
+            if (shapeCount > 0) {
+                b2Body_GetShapes(data.body_id, &shapeId, 1);
+                b2ShapeType shapeType = b2Shape_GetType(shapeId);
+
+
+
+                if (shapeType == b2_polygonShape) {
+                    sf::ConvexShape polygon = PointConput(data);
+                    if(pointInConvexPolygon(polygon, Point))
+                    {
+                        DrawTest_PointShow_DrawBuffer(ToScreen(transform.p));
+                        //std::cout << "P!!  "  << std::endl;
+                        return data;
+                    }
+                }
+
+                if (shapeType == b2_circleShape) {
+                    b2Circle _circle = b2Shape_GetCircle(shapeId);
+
+                    sf::Vector2f centerP = ToScreen(transform.p);
+                    sf::Vector2f screenRadius = ToScreen_L({ _circle.radius,_circle.radius });
+
+                    sf::Vector2f delta_P = Point - centerP;
+
+                    if (delta_P.length() <= screenRadius.x) {
+                        DrawTest_PointShow_DrawBuffer(ToScreen(transform.p));
+                        //std::cout << "C!!" << std::endl;
+                        return data;
+                    }
+                }
+            }
+        }
+        
+        bodyData nullData;
+        nullData.bodyName = u8"$NULL$";
+        nullData.body_id = b2_nullBodyId;
+        nullData.isProminent = false;
+        return nullData;
     }
 }

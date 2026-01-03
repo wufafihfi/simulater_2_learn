@@ -10,7 +10,7 @@ namespace bzd_SFML_main {
 	//BOX2D参数
 	sf::Clock clock;
 	float accumulator = 0.0f;
-	const float timeStep = 1.0f / 60.0f;
+	const float timeStep = 1.0f / 40.0f;
 	int subStepCount = 4;
 	b2WorldDef worldDef = b2DefaultWorldDef();
 	bzd_Phy::PhysicsWorld phyWorld_1(&worldDef,{ 0.0f, -10.0f });
@@ -22,6 +22,8 @@ namespace bzd_SFML_main {
     std::unique_ptr<sf::Text> text;
 	// TXT颜色
 	float textColor[3] = { 0.0f, 1.0f, 0.0f };
+	// BOX2D
+	bzd_Phy::bodyData selectedBodyData;
 
 	//物体ID
 	b2BodyId ground_bodyId;
@@ -58,33 +60,52 @@ namespace bzd_SFML_main {
 		// 物体
 		//地板1
 		{
+			bzd_Phy::bodyData data;
+			data.bodyName = u8"地板1";
 			b2BodyDef ground_bdef = b2DefaultBodyDef();
 			ground_bdef.position = b2Vec2({ -5.0f, 0.0f });
 			b2Polygon ground_box = b2MakeBox(5.0f, 1.0f);
 			b2ShapeDef ground_sdef = b2DefaultShapeDef();
 			ground_sdef.material.friction = 0.6f;
-			ground_bodyId = phyWorld_1.CreateBodyPolygon(&ground_bdef, &ground_box, &ground_sdef);
+			ground_bodyId = phyWorld_1.CreateBodyPolygon(&ground_bdef, &ground_box, &ground_sdef, data);
 		}
 		//地板2
 		{
+			bzd_Phy::bodyData data;
+			data.bodyName = u8"地板2";
 			b2BodyDef ground_bdef_1 = b2DefaultBodyDef();
 			ground_bdef_1.position = b2Vec2({ 30.0f, -30.0f });
 			b2Polygon ground_box_1 = b2MakeBox(200.0f, 1.0f);
 			b2ShapeDef ground_sdef_1 = b2DefaultShapeDef();
 			ground_sdef_1.material.friction = 0.5f;
-			phyWorld_1.CreateBodyPolygon(&ground_bdef_1, &ground_box_1, &ground_sdef_1);
+			phyWorld_1.CreateBodyPolygon(&ground_bdef_1, &ground_box_1, &ground_sdef_1, data);
 		}
 		//地板3
 		{
+			bzd_Phy::bodyData data;
+			data.bodyName = u8"地板3";
 			b2BodyDef ground_bdef_1 = b2DefaultBodyDef();
 			ground_bdef_1.position = b2Vec2({ -70.0f, -10.0f });
 			b2Polygon ground_box_1 = b2MakeBox(1.0f, 100.0f);
 			b2ShapeDef ground_sdef_1 = b2DefaultShapeDef();
 			ground_sdef_1.material.friction = 0.5f;
-			phyWorld_1.CreateBodyPolygon(&ground_bdef_1, &ground_box_1, &ground_sdef_1);
+			phyWorld_1.CreateBodyPolygon(&ground_bdef_1, &ground_box_1, &ground_sdef_1, data);
+		}
+		//地板4
+		{
+			bzd_Phy::bodyData data;
+			data.bodyName = u8"地板4";
+			b2BodyDef ground_bdef_1 = b2DefaultBodyDef();
+			ground_bdef_1.position = b2Vec2({ 180.0f, -10.0f });
+			b2Polygon ground_box_1 = b2MakeBox(1.0f, 60.0f);
+			b2ShapeDef ground_sdef_1 = b2DefaultShapeDef();
+			ground_sdef_1.material.friction = 0.5f;
+			phyWorld_1.CreateBodyPolygon(&ground_bdef_1, &ground_box_1, &ground_sdef_1, data);
 		}
 		//物体1
 		{
+			bzd_Phy::bodyData data;
+			data.bodyName = u8"物体1";
 			b2BodyDef bodyDef_1 = b2DefaultBodyDef();
 			bodyDef_1.type = b2_dynamicBody;
 			bodyDef_1.position = b2Vec2({ 0.0f, 10.0f });
@@ -92,10 +113,12 @@ namespace bzd_SFML_main {
 			b2ShapeDef shapeDef_1 = b2DefaultShapeDef();
 			shapeDef_1.density = 1.0f;
 			shapeDef_1.material.friction = 0.2f;
-			body_1_bodyId = phyWorld_1.CreateBodyPolygon(&bodyDef_1, &dynamicBox_1, &shapeDef_1);
+			body_1_bodyId = phyWorld_1.CreateBodyPolygon(&bodyDef_1, &dynamicBox_1, &shapeDef_1, data);
 		}
 		//物体2
 		{
+			bzd_Phy::bodyData data;
+			data.bodyName = u8"物体2";
 			b2BodyDef bodyDef_2 = b2DefaultBodyDef();
 			bodyDef_2.type = b2_dynamicBody;
 			bodyDef_2.position = b2Vec2({ -2.0f, 16.0f });
@@ -103,10 +126,12 @@ namespace bzd_SFML_main {
 			b2ShapeDef shapeDef_2 = b2DefaultShapeDef();
 			shapeDef_2.density = 1.0f;
 			shapeDef_2.material.friction = 0.3f;
-			body_2_bodyId = phyWorld_1.CreateBodyPolygon(&bodyDef_2, &dynamicBox_2, &shapeDef_2);
+			body_2_bodyId = phyWorld_1.CreateBodyPolygon(&bodyDef_2, &dynamicBox_2, &shapeDef_2, data);
 		}
 		//物体3
 		{
+			bzd_Phy::bodyData data;
+			data.bodyName = u8"物体3";
 			b2BodyDef bodyDef_3 = b2DefaultBodyDef();
 			bodyDef_3.type = b2_dynamicBody;
 			bodyDef_3.position = b2Vec2({ 8.0f, 25.0f });
@@ -116,10 +141,12 @@ namespace bzd_SFML_main {
 			b2ShapeDef shapeDef_3 = b2DefaultShapeDef();
 			shapeDef_3.density = 1.0f;
 			shapeDef_3.material.friction = 0.3f;
-			body_3_bodyId = phyWorld_1.CreateBodyCircle(&bodyDef_3, &dynamicCircle_3, &shapeDef_3);
+			body_3_bodyId = phyWorld_1.CreateBodyCircle(&bodyDef_3, &dynamicCircle_3, &shapeDef_3, data);
 		}
 		//物体4
 		{
+			bzd_Phy::bodyData data;
+			data.bodyName = u8"物体4";
 			b2BodyDef bodyDef = b2DefaultBodyDef();
 			bodyDef.type = b2_dynamicBody;
 			bodyDef.position = b2Vec2({ -33.0f, 3.0f });
@@ -127,10 +154,12 @@ namespace bzd_SFML_main {
 			b2ShapeDef shapeDef = b2DefaultShapeDef();
 			shapeDef.density = 2.0f;
 			shapeDef.material.friction = 0.4f;
-			body_4_bodyId = phyWorld_1.CreateBodyPolygon(&bodyDef, &dynamicBox, &shapeDef);
+			body_4_bodyId = phyWorld_1.CreateBodyPolygon(&bodyDef, &dynamicBox, &shapeDef, data);
 		}
 		//物体组
 		{
+			bzd_Phy::bodyData data;
+			data.bodyName = u8"物体组成员";
 			b2BodyDef bodyDef = b2DefaultBodyDef();
 			bodyDef.type = b2_dynamicBody;
 			bodyDef.position = b2Vec2({ -50.0f, 1.0f });
@@ -142,12 +171,12 @@ namespace bzd_SFML_main {
 			shapeDef.density = 0.6f;
 			shapeDef.material.friction = 0.1f;
 			shapeDef.material.restitution = 0.5f;
-			for (int g = 0; g <= 100; g++)
+			for (int g = 0; g <= 20; g++)
 			{
 				for (int i = 0; i <= 15; i++)
 				{
 					bodyDef.position = b2Vec2({ -67.0f + i * 2.0f, 1.0f + g * 2.0f });
-					phyWorld_1.CreateBodyCircle(&bodyDef, &dynamicCircle, &shapeDef);
+					phyWorld_1.CreateBodyCircle(&bodyDef, &dynamicCircle, &shapeDef, data);
 				}
 			}
 		}
@@ -173,7 +202,6 @@ namespace bzd_SFML_main {
 		{
 			// 获取鼠标滚轮事件
 			const auto& wheelEvent = _event->getIf<sf::Event::MouseWheelScrolled>();
-
 			if (wheelEvent)
 			{
 				// 判断是垂直滚轮还是水平滚轮
@@ -193,6 +221,11 @@ namespace bzd_SFML_main {
 					}
 				}
 			}
+		}
+
+		//窗口大小改变
+		if (_event->is<sf::Event::Resized>()) {
+			
 		}
 	}
 
@@ -229,7 +262,7 @@ namespace bzd_SFML_main {
 
 		///*
 		float Force_K = 5.0f;
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::A) && isThisWindowhasFocus) { 
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::A) && isThisWindowhasFocus) {
 			b2Body_ApplyForceToCenter(
 				body_3_bodyId,
 				{ b2Body_GetMass(body_3_bodyId) * b2World_GetGravity(phyWorld_1.GetWorldId()).y * Force_K,0.0f },
@@ -262,28 +295,27 @@ namespace bzd_SFML_main {
 		phyWorld_1.FollowBody(body_3_bodyId);
 
 
+		//BOX2D
 		// 物理更新
-		float deltaTime = clock.restart().asSeconds();
-		accumulator += deltaTime;
-		while (accumulator >= timeStep) {
-			b2WorldId worldId = phyWorld_1.GetWorldId();
-			b2World_Step(worldId, timeStep, subStepCount);
-			accumulator -= timeStep;
-			std::cout << deltaTime << "|物理更新" << std::endl;
-		}
+		b2WorldId worldId = phyWorld_1.GetWorldId();
+		b2World_Step(worldId, timeStep, subStepCount);
 	}
 
-    void Bzd_SFML_draw() {
-        //窗口
-        auto& _window = AppInit::getWinodw();
-		
-		//BOX2D
+	void Bzd_SFML_draw() {
+		//窗口
+		auto& _window = AppInit::getWinodw();
+		//鼠标
+		auto& _globalMousePos = AppInit::getGlobalMousePos();
+		auto& _windowMousePos = AppInit::getWindowMousePos();
+
+		phyWorld_1.drawbegin();
+		selectedBodyData = phyWorld_1.screenBodySelect(_window.mapPixelToCoords(_windowMousePos));
 		phyWorld_1.Render();
 		phyWorld_1.DrawBodyVelosity(body_3_bodyId);
+		phyWorld_1.Display();
 
 		_window.draw(*text);
-
-    }
+	}
 
 	//IMGUI
 	void UIready() {
@@ -362,6 +394,7 @@ namespace bzd_SFML_main {
 			if (windowSizeChange) {
 				sf::Vector2 windowSize = _window.getSize();
 				_window.setPosition(sf::Vector2i(desktopMode.size.x / 2.0f - windowSize.x / 2.0f, desktopMode.size.y / 2.0f - windowSize.y / 2.0f));
+				//phyWorld_1.setView(_window.getView());
 
 				windowSizeChange = false;
 			}
@@ -523,19 +556,129 @@ namespace bzd_SFML_main {
 			ImGui::Text(u8"帧率(SFML): %.1f FPS", fps);
 			ImGui::Text(u8"帧率(IMGUI): %.1f FPS", ImGui::GetIO().Framerate);
 			ImGui::NewLine();
+			static bool isCreateCircle = false;
+			static int frameCount = 0;
+			ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"极限&崩溃测试");
+			if(phyWorld_1.GetDataPoorSize() <= 1000)
+			{
+				ImGui::TextColored(ImVec4(0, 1, 0.5, 1),u8" 物体数: %d", phyWorld_1.GetDataPoorSize());
+			}
+			else if (phyWorld_1.GetDataPoorSize() <= 2048)
+			{
+				ImGui::TextColored(ImVec4(0.3, 1, 0, 1),u8" 物体数: %d", phyWorld_1.GetDataPoorSize());
+			}
+			else if (phyWorld_1.GetDataPoorSize() <= 3000)
+			{
+				ImGui::TextColored(ImVec4(0.4, 1, 0, 1), u8" 物体数: %d", phyWorld_1.GetDataPoorSize());
+			}
+			else if (phyWorld_1.GetDataPoorSize() <= 4000)
+			{
+				ImGui::TextColored(ImVec4(0.5, 1, 0, 1), u8" 物体数: %d", phyWorld_1.GetDataPoorSize());
+			}
+			else if (phyWorld_1.GetDataPoorSize() <= 5000)
+			{
+				ImGui::TextColored(ImVec4(0.8, 1, 0, 1), u8" 物体数: %d !", phyWorld_1.GetDataPoorSize());
+			}
+			else if (phyWorld_1.GetDataPoorSize() <= 8000)
+			{
+				ImGui::TextColored(ImVec4(1, 1, 0, 1), u8" 物体数: %d !!", phyWorld_1.GetDataPoorSize());
+			}
+			else
+			{
+				ImGui::TextColored(ImVec4(1, 0, 0, 1), u8" 物体数: %d !!!", phyWorld_1.GetDataPoorSize());
+			}
+			ImGui::Text(u8" 生成圆形:");
+			static float ooW = 10;
+			ImGui::SliderFloat(u8"圆形矩阵宽", &ooW, 1, 100);
+			static float ooH = 1;
+			ImGui::SliderFloat(u8"圆形矩阵高", &ooH, 1, 100);
+			static float ooT = 10;
+			ImGui::SliderFloat(u8"生成速率(1次/n帧)", &ooT, 1, 200);
+			if (!isCreateCircle) {
+				if (ImGui::Button(u8"点我开始生成"))
+				{
+					isCreateCircle = true;
+				}
+			}
+			if (isCreateCircle)
+			{
+				if (ImGui::Button(u8"点我停止生成"))
+				{
+					isCreateCircle = false;
+				}
+			}
+			if (isCreateCircle) {
+				frameCount++;
+				if (frameCount >= ooT)
+				{
+					bzd_Phy::bodyData data;
+					data.bodyName = u8"在主循环生成的物体";
+					b2BodyDef bodyDef = b2DefaultBodyDef();
+					bodyDef.type = b2_dynamicBody;
+					bodyDef.position = b2Vec2({ -50.0f, 1.0f });
+					//b2Polygon dynamicBox = b2MakeBox(1.0f, 1.0f);
+					b2Circle dynamicCircle;
+					dynamicCircle.center = { 0,0 };
+					dynamicCircle.radius = 0.5;
+					b2ShapeDef shapeDef = b2DefaultShapeDef();
+					shapeDef.density = 0.6f;
+					shapeDef.material.friction = 0.1f;
+					shapeDef.material.restitution = 0.5f;
+					for (int g = 0; g < ooH; g++)
+					{
+						for (int i = 0; i < ooW; i++)
+						{
+							bodyDef.position = b2Vec2({ -30.0f + i * 2.0f, 100.0f + g * 2.0f });
+							phyWorld_1.CreateBodyCircle(&bodyDef, &dynamicCircle, &shapeDef, data);
+						}
+					}
+					frameCount = 0;
+				}
+			}
 			ImGui::TextColored(ImVec4(0, 1, 0, 1), u8"box2d调试:");
 			b2Vec2 camera_CameraCenter = phyWorld_1.GetCameraOffset();
 			ImGui::Text(u8"相机世界坐标: (%0.1f , %0.1f)", camera_CameraCenter.x, camera_CameraCenter.y);
-			b2Vec2 body1Ps = b2Body_GetPosition(body_1_bodyId);
 			ImGui::SliderFloat(u8"相机缩放", &w_Czoom, minZoom, maxZoom);
-			phyWorld_1.SetCameraZoom(w_Czoom);
+			phyWorld_1.SetCameraZoom(w_Czoom); 
+			b2Vec2 body1Ps = b2Body_GetPosition(body_1_bodyId);
 ;			ImGui::Text(u8"物体1 坐标: (%0.1f , %0.1f)", body1Ps.x, body1Ps.y);
-			b2Vec2 body2Ps = b2Body_GetPosition(body_2_bodyId);
-			ImGui::Text(u8"物体2 坐标: (%0.1f , %0.1f)", body2Ps.x, body2Ps.y);
-			b2Vec2 body3Ps = b2Body_GetPosition(body_3_bodyId);
-			ImGui::Text(u8"物体3 坐标: (%0.1f , %0.1f)", body3Ps.x, body3Ps.y);
-			ImGui::NewLine();
+			ImGui::End();
 
+			ImGui::PopStyleVar(); // 透明度调整结尾
+		}
+		// 其他窗口
+		{
+			static float windowAlpha = 0;
+			static float maxAlpha = 0.7;
+			static float minAlpha = 0.3;
+
+			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, windowAlpha);
+			ImGui::Begin(u8"物体属性");
+
+			//窗口动态透明度调整 平滑过渡
+			bool bestHoverCheck = ImGui::IsWindowHovered(
+				ImGuiHoveredFlags_ChildWindows |
+				ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+			bool isFocused = ImGui::IsWindowFocused();
+			if (bestHoverCheck || isFocused)
+			{
+				windowAlpha = valueChangeSmooth(10, windowAlpha, maxAlpha);
+			}
+			else {
+				windowAlpha = valueChangeSmooth(20, windowAlpha, minAlpha);
+			}
+			ImGui::NewLine();
+			ImGui::TextColored(ImVec4(1, 1, 0, 1), u8"基础:");
+			ImGui::Text(u8"名称: %s", selectedBodyData.bodyName.c_str());
+			if (phyWorld_1.bodyIdStatu(selectedBodyData.body_id))
+			{
+				b2Vec2 bodyPs = b2Body_GetPosition(selectedBodyData.body_id);
+				ImGui::Text(u8"坐标: (%0.1f , %0.1f)", bodyPs.x, bodyPs.y);
+			}
+			else
+			{
+				ImGui::Text(u8"坐标: ($ , $)");
+			}
 			ImGui::End();
 
 			ImGui::PopStyleVar(); // 透明度调整结尾

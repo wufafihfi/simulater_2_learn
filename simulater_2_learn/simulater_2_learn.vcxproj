@@ -90,13 +90,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\15280\source\repos\simulater_2_learn\package\include\imgui;C:\Users\15280\source\repos\simulater_2_learn\package\include;C:\Users\15280\vcpkg\installed\x86-windows-static\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\15280\source\repos\simulater_2_learn_thread_physics\package\include\imgui;C:\Users\15280\source\repos\simulater_2_learn_thread_physics\package\include;C:\Users\15280\vcpkg\installed\x86-windows-static\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\15280\source\repos\simulater_2_learn\package\lib;C:\Users\15280\vcpkg\installed\x86-windows\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\15280\source\repos\simulater_2_learn_thread_physics\package\lib;C:\Users\15280\vcpkg\installed\x86-windows\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;Shcore.lib;sfml-graphics.lib;sfml-window.lib;sfml-system.lib;ImGui-SFML.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

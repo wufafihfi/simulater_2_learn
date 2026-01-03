@@ -8,7 +8,12 @@
 #include <vector>
 #include <memory>
 #include <cstdint>
-#include <memory>
+#include <functional>
+#include <thread>
+#include <chrono>
+#include <queue>
+#include <immintrin.h>
+#include <future>
 
 #include <box2d/box2d.h>
 

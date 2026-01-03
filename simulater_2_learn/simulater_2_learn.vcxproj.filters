@@ -24,6 +24,9 @@
     <ClCompile Include="include\bzd_SFML_Main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="include\PhysicsWorld.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\appInit.h">
@@ -33,6 +36,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\bzd_SFML_Main.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\PhysicsWorld.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
