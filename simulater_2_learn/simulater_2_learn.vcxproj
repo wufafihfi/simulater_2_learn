@@ -128,13 +128,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="include\appInit.cpp" />
+    <ClCompile Include="include\applyLua.cpp" />
     <ClCompile Include="include\bzd_SFML_Main.cpp" />
+    <ClCompile Include="include\LUAmanager.cpp" />
     <ClCompile Include="include\PhysicsWorld.cpp" />
     <ClCompile Include="simulater2Main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\appInit.h" />
+    <ClInclude Include="include\applyLua.h" />
     <ClInclude Include="include\bzd_SFML_Main.h" />
+    <ClInclude Include="include\LUAmanager.h" />
     <ClInclude Include="include\PhysicsWorld.h" />
     <ClInclude Include="include\S2L_includeAll.hpp" />
   </ItemGroup>

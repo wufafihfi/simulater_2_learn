@@ -9,8 +9,9 @@ namespace bzd_SFML_main {
 
 	//BOX2D参数
 	sf::Clock clock;
+	float deltaTime = 0;
 	float accumulator = 0.0f;
-	const float timeStep = 1.0f / 40.0f;
+	const float timeStep = 1.0f / 60.0f;
 	int subStepCount = 4;
 	b2WorldDef worldDef = b2DefaultWorldDef();
 	bzd_Phy::PhysicsWorld phyWorld_1(&worldDef,{ 0.0f, -10.0f });
@@ -23,7 +24,11 @@ namespace bzd_SFML_main {
 	// TXT颜色
 	float textColor[3] = { 0.0f, 1.0f, 0.0f };
 	// BOX2D
-	bzd_Phy::bodyData selectedBodyData;
+	bzd_Phy::bodyData hoveringBodyData = bzd_Phy::GetNullBody();
+	bzd_Phy::bodyData selectedBodyData = bzd_Phy::GetNullBody();
+
+	//LUA脚本
+	ApplyLua::LuaAP luaScriptSystem;
 
 	//物体ID
 	b2BodyId ground_bodyId;
@@ -57,6 +62,11 @@ namespace bzd_SFML_main {
 		phyWorld_1.setWindow(&_window);
 		phyWorld_1.SetCameraOffset(b2Vec2{ 0.0f, 0.0f });
 		phyWorld_1.SetCameraZoom(0.8f);
+
+		//LUA脚本
+		ApplyLua::SetDataPoor(&phyWorld_1.DataPoor);
+		luaScriptSystem.initLuaAP(phyWorld_1.GetWorldId());
+
 		// 物体
 		//地板1
 		{
@@ -75,7 +85,7 @@ namespace bzd_SFML_main {
 			data.bodyName = u8"地板2";
 			b2BodyDef ground_bdef_1 = b2DefaultBodyDef();
 			ground_bdef_1.position = b2Vec2({ 30.0f, -30.0f });
-			b2Polygon ground_box_1 = b2MakeBox(200.0f, 1.0f);
+			b2Polygon ground_box_1 = b2MakeBox(1000.0f, 1.0f);
 			b2ShapeDef ground_sdef_1 = b2DefaultShapeDef();
 			ground_sdef_1.material.friction = 0.5f;
 			phyWorld_1.CreateBodyPolygon(&ground_bdef_1, &ground_box_1, &ground_sdef_1, data);
@@ -85,7 +95,7 @@ namespace bzd_SFML_main {
 			bzd_Phy::bodyData data;
 			data.bodyName = u8"地板3";
 			b2BodyDef ground_bdef_1 = b2DefaultBodyDef();
-			ground_bdef_1.position = b2Vec2({ -70.0f, -10.0f });
+			ground_bdef_1.position = b2Vec2({ -200.0f, -10.0f });
 			b2Polygon ground_box_1 = b2MakeBox(1.0f, 100.0f);
 			b2ShapeDef ground_sdef_1 = b2DefaultShapeDef();
 			ground_sdef_1.material.friction = 0.5f;
@@ -96,7 +106,7 @@ namespace bzd_SFML_main {
 			bzd_Phy::bodyData data;
 			data.bodyName = u8"地板4";
 			b2BodyDef ground_bdef_1 = b2DefaultBodyDef();
-			ground_bdef_1.position = b2Vec2({ 180.0f, -10.0f });
+			ground_bdef_1.position = b2Vec2({ 300.0f, -10.0f });
 			b2Polygon ground_box_1 = b2MakeBox(1.0f, 60.0f);
 			b2ShapeDef ground_sdef_1 = b2DefaultShapeDef();
 			ground_sdef_1.material.friction = 0.5f;
@@ -262,38 +272,58 @@ namespace bzd_SFML_main {
 
 		///*
 		float Force_K = 5.0f;
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::A) && isThisWindowhasFocus) {
-			b2Body_ApplyForceToCenter(
-				body_3_bodyId,
-				{ b2Body_GetMass(body_3_bodyId) * b2World_GetGravity(phyWorld_1.GetWorldId()).y * Force_K,0.0f },
-				true
-			);
-		}
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::D) && isThisWindowhasFocus) {
-			b2Body_ApplyForceToCenter(
-				body_3_bodyId,
-				{ b2Body_GetMass(body_3_bodyId) * b2World_GetGravity(phyWorld_1.GetWorldId()).y * -Force_K,0.0f },
-				true
-			);
-		}
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::W) && isThisWindowhasFocus) {
-			b2Body_ApplyForceToCenter(
-				body_3_bodyId,
-				{ 0.0f,b2Body_GetMass(body_3_bodyId) * b2World_GetGravity(phyWorld_1.GetWorldId()).y * -Force_K },
-				true
-			);
-		}
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::S) && isThisWindowhasFocus) {
-			b2Body_ApplyForceToCenter(
-				body_3_bodyId,
-				{ 0.0f,b2Body_GetMass(body_3_bodyId) * b2World_GetGravity(phyWorld_1.GetWorldId()).y * Force_K },
-				true
-			);
-		}
-		//*/
+		if(phyWorld_1.bodyIdStatu(selectedBodyData.body_id))
+		{
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::A) && isThisWindowhasFocus) {
+				b2Body_ApplyForceToCenter(
+					selectedBodyData.body_id,
+					{ b2Body_GetMass(selectedBodyData.body_id) * b2World_GetGravity(phyWorld_1.GetWorldId()).y * Force_K,0.0f },
+					true
+				);
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::D) && isThisWindowhasFocus) {
+				b2Body_ApplyForceToCenter(
+					selectedBodyData.body_id,
+					{ b2Body_GetMass(selectedBodyData.body_id) * b2World_GetGravity(phyWorld_1.GetWorldId()).y * -Force_K,0.0f },
+					true
+				);
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::W) && isThisWindowhasFocus) {
+				b2Body_ApplyForceToCenter(
+					selectedBodyData.body_id,
+					{ 0.0f,b2Body_GetMass(selectedBodyData.body_id) * b2World_GetGravity(phyWorld_1.GetWorldId()).y * -Force_K },
+					true
+				);
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::S) && isThisWindowhasFocus) {
+				b2Body_ApplyForceToCenter(
+					selectedBodyData.body_id,
+					{ 0.0f,b2Body_GetMass(selectedBodyData.body_id) * b2World_GetGravity(phyWorld_1.GetWorldId()).y * Force_K },
+					true
+				);
+			}
 
-		phyWorld_1.FollowBody(body_3_bodyId);
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::Q) && isThisWindowhasFocus) {
+				b2Body_ApplyTorque(
+					selectedBodyData.body_id,
+					b2Body_GetMass(selectedBodyData.body_id) * b2World_GetGravity(phyWorld_1.GetWorldId()).y * -Force_K * 5,
+					true
+				);
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::E) && isThisWindowhasFocus) {
+				b2Body_ApplyTorque(
+					selectedBodyData.body_id,
+					b2Body_GetMass(selectedBodyData.body_id) * b2World_GetGravity(phyWorld_1.GetWorldId()).y * Force_K * 5,
+					true
+				);
+			}
+			//*/
 
+			phyWorld_1.FollowBody(selectedBodyData.body_id);
+		}
+
+		//LUA脚本
+		luaScriptSystem.UpDateLuaScript(deltaTime);
 
 		//BOX2D
 		// 物理更新
@@ -309,12 +339,18 @@ namespace bzd_SFML_main {
 		auto& _windowMousePos = AppInit::getWindowMousePos();
 
 		phyWorld_1.drawbegin();
-		selectedBodyData = phyWorld_1.screenBodySelect(_window.mapPixelToCoords(_windowMousePos));
+		hoveringBodyData = phyWorld_1.screenBodySelect_1(_window.mapPixelToCoords(_windowMousePos));
+		phyWorld_1.drawSelectedBody();
 		phyWorld_1.Render();
-		phyWorld_1.DrawBodyVelosity(body_3_bodyId);
+		if (phyWorld_1.bodyIdStatu(selectedBodyData.body_id))
+		{
+			phyWorld_1.DrawBodyVelosity(selectedBodyData.body_id);
+		}
 		phyWorld_1.Display();
 
 		_window.draw(*text);
+
+		deltaTime = clock.restart().asSeconds();
 	}
 
 	//IMGUI
@@ -357,6 +393,11 @@ namespace bzd_SFML_main {
 			}
 			else {
 				windowAlpha = valueChangeSmooth(20, windowAlpha, minAlpha);
+			}
+			static bool stillHighAlpha = false;
+			ImGui::Checkbox(u8"窗口常亮", &stillHighAlpha);
+			if (stillHighAlpha) {
+				windowAlpha = maxAlpha;
 			}
 			ImGui::Text(u8"窗口透明度:%0.3f", windowAlpha);
 			if (ImGui::IsItemHovered()) {
@@ -523,6 +564,11 @@ namespace bzd_SFML_main {
 			else {
 				windowAlpha = valueChangeSmooth(20, windowAlpha, minAlpha);
 			}
+			static bool stillHighAlpha = false;
+			ImGui::Checkbox(u8"窗口常亮", &stillHighAlpha);
+			if (stillHighAlpha) {
+				windowAlpha = maxAlpha;
+			}
 			ImGui::NewLine();
 			ImGui::ColorEdit3(u8"字的颜色", bzd_SFML_main::textColor);
 			ImGui::End();
@@ -550,8 +596,12 @@ namespace bzd_SFML_main {
 			else {
 				windowAlpha = valueChangeSmooth(20, windowAlpha, minAlpha);
 			}
+			static bool stillHighAlpha = false;
+			ImGui::Checkbox(u8"窗口常亮", &stillHighAlpha);
+			if (stillHighAlpha) {
+				windowAlpha = maxAlpha;
+			}
 			ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"性能:");
-			float deltaTime = clock.restart().asSeconds();
 			float fps = 1.0f / deltaTime;
 			ImGui::Text(u8"帧率(SFML): %.1f FPS", fps);
 			ImGui::Text(u8"帧率(IMGUI): %.1f FPS", ImGui::GetIO().Framerate);
@@ -646,14 +696,14 @@ namespace bzd_SFML_main {
 
 			ImGui::PopStyleVar(); // 透明度调整结尾
 		}
-		// 其他窗口
+		// 捕获的物体
 		{
 			static float windowAlpha = 0;
 			static float maxAlpha = 0.7;
 			static float minAlpha = 0.3;
 
 			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, windowAlpha);
-			ImGui::Begin(u8"物体属性");
+			ImGui::Begin(u8"捕获的物体属性");
 
 			//窗口动态透明度调整 平滑过渡
 			bool bestHoverCheck = ImGui::IsWindowHovered(
@@ -667,8 +717,66 @@ namespace bzd_SFML_main {
 			else {
 				windowAlpha = valueChangeSmooth(20, windowAlpha, minAlpha);
 			}
+			static bool stillHighAlpha = false;
+			ImGui::Checkbox(u8"窗口常亮", &stillHighAlpha);
+			if (stillHighAlpha) {
+				windowAlpha = maxAlpha;
+			}
 			ImGui::NewLine();
-			ImGui::TextColored(ImVec4(1, 1, 0, 1), u8"基础:");
+			ImGui::TextColored(ImVec4(1, 1, 0, 1), u8"基础信息:");
+			ImGui::Text(u8"ID: %d", hoveringBodyData.BodyId_int);
+			ImGui::Text(u8"名称: %s", hoveringBodyData.bodyName.c_str());
+			if (phyWorld_1.bodyIdStatu(hoveringBodyData.body_id))
+			{
+				b2Vec2 bodyPs = b2Body_GetPosition(hoveringBodyData.body_id);
+				ImGui::Text(u8"坐标: (%0.1f , %0.1f)", bodyPs.x, bodyPs.y);
+			}
+			else
+			{
+				ImGui::Text(u8"坐标: ($ , $)");
+			}
+			if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && hoveringBodyData.isHovering && !hoveringBodyData.isProminent)
+			{
+				selectedBodyData = phyWorld_1.screenBodySelect_2(hoveringBodyData);
+			}
+			ImGui::NewLine();
+			ImGui::TextColored(ImVec4(1, 1, 0, 1), u8"状态:");
+			ImGui::Text(u8"是否被光标捕获: %s", hoveringBodyData.isHovering ? u8"是" : u8"否");
+			ImGui::Text(u8"是否被选取(被持续关注): %s", hoveringBodyData.isProminent ? u8"是" : u8"否");
+			ImGui::End();
+
+			ImGui::PopStyleVar(); // 透明度调整结尾
+		}
+		// 其他窗口
+		{
+			static float windowAlpha = 0;
+			static float maxAlpha = 0.7;
+			static float minAlpha = 0.3;
+
+			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, windowAlpha);
+			ImGui::Begin(u8"关注的物体属性");
+
+			//窗口动态透明度调整 平滑过渡
+			bool bestHoverCheck = ImGui::IsWindowHovered(
+				ImGuiHoveredFlags_ChildWindows |
+				ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+			bool isFocused = ImGui::IsWindowFocused();
+			if (bestHoverCheck || isFocused)
+			{
+				windowAlpha = valueChangeSmooth(10, windowAlpha, maxAlpha);
+			}
+			else {
+				windowAlpha = valueChangeSmooth(20, windowAlpha, minAlpha);
+			}
+			static bool stillHighAlpha = false;
+			ImGui::Checkbox(u8"窗口常亮", &stillHighAlpha);
+			if (stillHighAlpha) {
+				windowAlpha = maxAlpha;
+			}
+			ImGui::NewLine();
+			
+			ImGui::TextColored(ImVec4(1, 1, 0, 1), u8"基础信息:");
+			ImGui::Text(u8"ID: %d", selectedBodyData.BodyId_int);
 			ImGui::Text(u8"名称: %s", selectedBodyData.bodyName.c_str());
 			if (phyWorld_1.bodyIdStatu(selectedBodyData.body_id))
 			{
@@ -679,14 +787,25 @@ namespace bzd_SFML_main {
 			{
 				ImGui::Text(u8"坐标: ($ , $)");
 			}
+			
+			ImGui::NewLine();
+			ImGui::TextColored(ImVec4(1, 1, 0, 1), u8"状态:");
+			ImGui::Text(u8"是否被光标捕获: %s", selectedBodyData.isHovering ? u8"是" : u8"否");
+			ImGui::Text(u8"是否被选取(被持续关注): %s", selectedBodyData.isProminent ? u8"是" : u8"否");
+			
+			ImGui::TextColored(ImVec4(0, 1, 0, 1), u8"Lua:");
+			luaScriptSystem.BodyLuaSetting(selectedBodyData);
+
 			ImGui::End();
 
 			ImGui::PopStyleVar(); // 透明度调整结尾
 		}
 	}
 
+
 	//程序结束
 	void Bzd_End() {
 		ImGui::SFML::Shutdown();
+		luaScriptSystem.manager.~LuaManager();
 	}
 }

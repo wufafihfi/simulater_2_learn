@@ -19,6 +19,7 @@
 
 #include "appInit.h"
 #include "PhysicsWorld.h"
+#include "applyLua.h"
 
 namespace bzd_SFML_main {
 

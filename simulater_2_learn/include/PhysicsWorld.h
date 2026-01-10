@@ -9,11 +9,20 @@
 namespace bzd_Phy {
     struct bodyData {
     public:
+        uint32_t BodyId_int = -1;
         std::string bodyName = u8"$NULL$";
         b2BodyId body_id = b2_nullBodyId;
 
         bool isProminent = false;
+        bool isHovering = false;
+        bool isCreateInstance = false;
+        std::string InstanceName = "";
+        std::string InstanceId = "";
+        std::vector<std::string> debugMessages;
+
+        b2WorldId *worldId;
     };
+    bodyData& GetNullBody();
 
     class PhysicsWorld {
     private:
@@ -22,7 +31,10 @@ namespace bzd_Phy {
         sf::View view;
 
         b2WorldId worldId;
+    public:
         std::vector<bodyData> DataPoor;
+    private:
+        uint32_t IdFuther = 0;
 
         // 转换比例：1米 = 30像素
         const float SCALE = 30.0f;
@@ -64,11 +76,14 @@ namespace bzd_Phy {
         void ZoomCamera(float factor);
         void FollowBody(b2BodyId& body);
         void DrawBodyVelosity(b2BodyId& body);
-        bodyData screenBodySelect(sf::Vector2f Point);
+        bodyData screenBodySelect_1(sf::Vector2f Point);
+        bodyData screenBodySelect_2(bodyData data);
         bool bodyIdStatu(b2BodyId& body);
 
         void DrawTest_PointShow_WINDOW(sf::Vector2f p);
         void DrawTest_PointShow_DrawBuffer(sf::Vector2f p);
+
+        void drawSelectedBody();
 
     private:
         // 辅助绘制函数
@@ -79,7 +94,8 @@ namespace bzd_Phy {
         void DrawTest_CoordinateTransformation();
         // 顶点计算
         sf::ConvexShape PointConput(bodyData& bodyData);
-        sf::ConvexShape PointConput_B2SF(bodyData& bodyData);
+        //sf::ConvexShape PointConput_B2SF(bodyData& bodyData);
+        
     };
 }
 #endif

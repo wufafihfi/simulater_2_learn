@@ -1,6 +1,10 @@
 #include "PhysicsWorld.h"
 
 namespace bzd_Phy {
+    bodyData bzdPhyNullBody = { -1, u8"$NULL$" ,b2_nullBodyId ,false ,false ,false };
+    bodyData& GetNullBody() {
+        return bzdPhyNullBody;
+    }
 
     PhysicsWorld::PhysicsWorld(b2WorldDef* _worldDef, b2Vec2 _gravity) {
         _worldDef->gravity = _gravity;
@@ -35,19 +39,25 @@ namespace bzd_Phy {
 
     b2BodyId PhysicsWorld::CreateBodyPolygon(b2BodyDef* _BodyDef, b2Polygon* _Box, b2ShapeDef* _shapeDef, bodyData Data) {
         DataPoor.push_back(Data);
-        _BodyDef->userData = &DataPoor.back();
+        //_BodyDef->userData = &DataPoor.back();
         b2BodyId bodyId = b2CreateBody(worldId, _BodyDef);
         b2CreatePolygonShape(bodyId, _shapeDef, _Box);
         DataPoor.back().body_id = bodyId;
+        DataPoor.back().BodyId_int = IdFuther;
+        DataPoor.back().worldId = &worldId;
+        IdFuther++;
         return bodyId;
     }
 
     b2BodyId PhysicsWorld::CreateBodyCircle(b2BodyDef* _BodyDef, b2Circle* _circle, b2ShapeDef* _shapeDef, bodyData Data) {
         DataPoor.push_back(Data);
-        _BodyDef->userData = &DataPoor.back();
+        //_BodyDef->userData = &DataPoor.back();
         b2BodyId bodyId = b2CreateBody(worldId, _BodyDef);
         b2CreateCircleShape(bodyId, _shapeDef, _circle);
         DataPoor.back().body_id = bodyId;
+        DataPoor.back().BodyId_int = IdFuther;
+        DataPoor.back().worldId = &worldId;
+        IdFuther++;
         return bodyId;
     }
 
@@ -219,7 +229,6 @@ namespace bzd_Phy {
 
     // 渲染
     void PhysicsWorld::Render() {
-
         //DrawTest_CoordinateTransformation();
         DrawCameraCenter();
         DrawCoordinateSystemGrid();
@@ -544,7 +553,10 @@ namespace bzd_Phy {
     }
 
     // 屏幕物体选取
-    bodyData PhysicsWorld::screenBodySelect(sf::Vector2f Point) {
+    //获取鼠标光标下的物体
+    bodyData PhysicsWorld::screenBodySelect_1(sf::Vector2f Point) {
+        bodyData returnData = bzdPhyNullBody;
+        //int i = 1;
         //DrawTest_PointShow_DrawBuffer(Point);
         for (auto& data : DataPoor) {
             if (!b2Body_IsValid(data.body_id)) {
@@ -566,8 +578,14 @@ namespace bzd_Phy {
                     if(pointInConvexPolygon(polygon, Point))
                     {
                         DrawTest_PointShow_DrawBuffer(ToScreen(transform.p));
-                        //std::cout << "P!!  "  << std::endl;
-                        return data;
+                        data.isHovering = true;
+                        //std::cout << "C!!" << i << std::endl;
+                        //i++;
+                        returnData = data;
+                    }
+                    else
+                    {
+                        data.isHovering = false;
                     }
                 }
 
@@ -581,17 +599,58 @@ namespace bzd_Phy {
 
                     if (delta_P.length() <= screenRadius.x) {
                         DrawTest_PointShow_DrawBuffer(ToScreen(transform.p));
-                        //std::cout << "C!!" << std::endl;
-                        return data;
+                        //std::cout << "C!!" << i << std::endl;
+                        //i++;
+                        data.isHovering = true;
+                        returnData = data;
+                    }
+                    else
+                    {
+                        data.isHovering = false;
                     }
                 }
             }
         }
         
-        bodyData nullData;
-        nullData.bodyName = u8"$NULL$";
-        nullData.body_id = b2_nullBodyId;
-        nullData.isProminent = false;
-        return nullData;
+        return returnData;
+    }
+    //选取物品,不做选取触发逻辑
+    bodyData PhysicsWorld::screenBodySelect_2(bodyData data) {
+        for (auto& data : DataPoor) {
+            if (!b2Body_IsValid(data.body_id)) {
+                continue;
+            }
+            if (!data.isProminent)
+            {
+                continue;
+            }
+            data.isProminent = false;
+        }
+
+        DataPoor[data.BodyId_int].isProminent = true;
+        data.isProminent = true;
+        return data;
+    }
+    //绘制被选取状态指示图形
+    void PhysicsWorld::drawSelectedBody() {
+        //int i = 1;
+        for (auto& data : DataPoor) {
+            if (!b2Body_IsValid(data.body_id)) {
+                continue;
+            }
+            /*
+            if (data.isHovering)
+            {
+                std::cout << "h!!" << i << std::endl;
+                i++;
+            }
+            */
+            if (!data.isProminent)
+            {
+                continue;
+            }
+            b2Transform transform = b2Body_GetTransform(data.body_id);
+            DrawTest_PointShow_DrawBuffer(ToScreen(transform.p));
+        }
     }
 }
