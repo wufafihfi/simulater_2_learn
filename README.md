@@ -4,7 +4,7 @@
 - 1.我太菜了
 - 2.我已经耗费了很多精力了,在这方面一直没能成功,累了
 # Lua使用须知
-- 这里的可能做的不够好,发布文件里有使用指南（.HTML）
+- 这里的可能做的不够好,发布文件里有使用指北（.HTML）
 ## 格式
 - 此程序的LUA脚本格式跟大多数游戏引擎所用的脚本基本格式差不多(Godot,Unity,虚幻C++没用过)
 ## 全局变量
@@ -33,6 +33,7 @@ local current_time = API.time_ms() --数值单位为 毫秒(ms)
 ## 物理交互
 ```lua
 local Ps = API.getPosition(BodyID_int) --获取物体位置(几何中心点)
+local Ag = API.getAngle(BodyID_int) --获取物体角度(弧度制)
 local V = API.getVelocity(BodyID_int) --获取物体速度
 local m = API.getMass(BodyID_int) --获取物体质量
 local g =  API.getGravity(BodyID_int) --获取世界的重力加速度
